@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: trading-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-trading}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trading_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-trading}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trading} -d ${POSTGRES_DB:-trading}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: trading-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-trading}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-trading}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-trading_secret}
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD:-changeme}
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: Asia/Kolkata
+      ALPHA_VANTAGE_KEY: ${ALPHA_VANTAGE_KEY}
+      NEWS_API_KEY: ${NEWS_API_KEY}
+      ALPACA_API_KEY: ${ALPACA_API_KEY}
+      ALPACA_SECRET_KEY: ${ALPACA_SECRET_KEY}
+      ALPACA_BASE_URL: ${ALPACA_BASE_URL:-https://paper-api.alpaca.markets}
+      DEFAULT_SYMBOLS: ${DEFAULT_SYMBOLS:-AAPL,MSFT}
+      CONFIDENCE_THRESHOLD: ${CONFIDENCE_THRESHOLD:-70}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  adminer:
+    image: adminer:latest
+    container_name: trading-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  n8n_data:

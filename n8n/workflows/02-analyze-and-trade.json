@@ -1,0 +1,197 @@
+{
+  "name": "02 - Analyze and Trade",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analyze-and-trade",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "analyze-and-trade"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 31 }]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 31 Minutes (fallback)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 500]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT ON (symbol) id, symbol, price_json, news_json, created_at\nFROM market_snapshots\nORDER BY symbol, created_at DESC;",
+        "options": {}
+      },
+      "id": "load-snapshots",
+      "name": "Load Latest Snapshots",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [260, 400],
+      "credentials": {
+        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{ $env.OLLAMA_MODEL || 'llama3.2' }}\",\n  \"prompt\": \"You are a trading assistant. Given price data and news headlines for {{ $json.symbol }}, respond ONLY with valid JSON (no markdown): {\\\"action\\\":\\\"BUY\\\"|\\\"SELL\\\"|\\\"HOLD\\\",\\\"confidence\\\":0-100,\\\"reasoning\\\":\\\"...\\\"}\\n\\nPrice data: {{ JSON.stringify($json.price_json) }}\\n\\nNews: {{ JSON.stringify($json.news_json) }}\",\n  \"stream\": false\n}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "ollama-analyze",
+      "name": "Ollama Analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const symbol = $('Load Latest Snapshots').item.json.symbol;\n  const rawResponse = item.json.response || '';\n  let parsed = { action: 'HOLD', confidence: 0, reasoning: 'Failed to parse LLM response' };\n\n  try {\n    const jsonMatch = rawResponse.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      parsed = JSON.parse(jsonMatch[0]);\n    }\n  } catch (e) {\n    parsed.reasoning = 'Parse error: ' + e.message;\n  }\n\n  parsed.action = (parsed.action || 'HOLD').toUpperCase();\n  parsed.confidence = Math.min(100, Math.max(0, parseInt(parsed.confidence) || 0));\n  parsed.symbol = symbol;\n  parsed.raw_llm_response = rawResponse;\n\n  results.push({ json: parsed });\n}\n\nreturn results;"
+      },
+      "id": "parse-response",
+      "name": "Parse LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "confidence-check",
+              "leftValue": "={{ $json.confidence }}",
+              "rightValue": "={{ $env.CONFIDENCE_THRESHOLD || 70 }}",
+              "operator": { "type": "number", "operation": "gte" }
+            },
+            {
+              "id": "action-check",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "HOLD",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "confidence-gate",
+      "name": "Confidence >= Threshold?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [980, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO signals (symbol, action, confidence, reasoning, raw_llm_response)\nVALUES ('{{ $json.symbol }}', '{{ $json.action }}', {{ $json.confidence }}, '{{ $json.reasoning.replace(/'/g, \"''\") }}', '{{ ($json.raw_llm_response || '').replace(/'/g, \"''\") }}')\nRETURNING id;",
+        "options": {}
+      },
+      "id": "log-signal-hold",
+      "name": "Log Signal (No Trade)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1220, 560],
+      "credentials": {
+        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets' }}/v2/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"symbol\": \"{{ $json.symbol }}\",\n  \"qty\": \"1\",\n  \"side\": \"{{ $json.action.toLowerCase() }}\",\n  \"type\": \"market\",\n  \"time_in_force\": \"day\"\n}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "alpaca-order",
+      "name": "Alpaca Paper Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 280],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_ALPACA_CREDENTIAL_ID", "name": "Alpaca Paper API" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO signals (symbol, action, confidence, reasoning, raw_llm_response)\nVALUES ('{{ $('Parse LLM Response').item.json.symbol }}', '{{ $('Parse LLM Response').item.json.action }}', {{ $('Parse LLM Response').item.json.confidence }}, '{{ $('Parse LLM Response').item.json.reasoning.replace(/'/g, \"''\") }}', '{{ ($('Parse LLM Response').item.json.raw_llm_response || '').replace(/'/g, \"''\") }}')\nRETURNING id;",
+        "options": {}
+      },
+      "id": "log-signal-trade",
+      "name": "Log Signal (Trade)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1460, 280],
+      "credentials": {
+        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO trades (signal_id, symbol, side, qty, entry_price, alpaca_order_id, status)\nVALUES ({{ $('Log Signal (Trade)').item.json.id }}, '{{ $('Parse LLM Response').item.json.symbol }}', '{{ $('Parse LLM Response').item.json.action.toLowerCase() }}', 1, {{ $json.filled_avg_price || 'NULL' }}, '{{ $json.id }}', '{{ $json.status }}');",
+        "options": {}
+      },
+      "id": "log-trade",
+      "name": "Log Trade",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1700, 280],
+      "credentials": {
+        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Load Latest Snapshots", "type": "main", "index": 0 }]]
+    },
+    "Every 31 Minutes (fallback)": {
+      "main": [[{ "node": "Load Latest Snapshots", "type": "main", "index": 0 }]]
+    },
+    "Load Latest Snapshots": {
+      "main": [[{ "node": "Ollama Analyze", "type": "main", "index": 0 }]]
+    },
+    "Ollama Analyze": {
+      "main": [[{ "node": "Parse LLM Response", "type": "main", "index": 0 }]]
+    },
+    "Parse LLM Response": {
+      "main": [[{ "node": "Confidence >= Threshold?", "type": "main", "index": 0 }]]
+    },
+    "Confidence >= Threshold?": {
+      "main": [
+        [{ "node": "Alpaca Paper Order", "type": "main", "index": 0 }],
+        [{ "node": "Log Signal (No Trade)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Alpaca Paper Order": {
+      "main": [[{ "node": "Log Signal (Trade)", "type": "main", "index": 0 }]]
+    },
+    "Log Signal (Trade)": {
+      "main": [[{ "node": "Log Trade", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{ "name": "trading-mvp" }]
+}

@@ -1,0 +1,178 @@
+{
+  "name": "01 - Data Collection",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 30 }]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 30 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "symbols",
+              "name": "symbols",
+              "value": "={{ $env.DEFAULT_SYMBOLS || 'AAPL,MSFT' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-symbols",
+      "name": "Set Symbols",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "symbols",
+        "options": {}
+      },
+      "id": "split-symbols",
+      "name": "Split Symbols",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "symbol",
+              "name": "symbol",
+              "value": "={{ $json.symbols.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-symbol",
+      "name": "Set Symbol",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={{ $json.symbol }}&apikey={{ $env.ALPHA_VANTAGE_KEY }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "fetch-price",
+      "name": "Alpha Vantage Price",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://newsapi.org/v2/everything?q={{ $json.symbol }}&sortBy=publishedAt&pageSize=5&apiKey={{ $env.NEWS_API_KEY }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "fetch-news",
+      "name": "NewsAPI Headlines",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 400]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "merge-data",
+      "name": "Merge Price + News",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const priceData = item.json[0] || item.json;\n  const newsData = item.json[1] || {};\n  const symbol = $('Set Symbol').first().json.symbol;\n\n  results.push({\n    json: {\n      symbol,\n      price_json: JSON.stringify(priceData),\n      news_json: JSON.stringify(newsData.articles || [])\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "normalize",
+      "name": "Normalize Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO market_snapshots (symbol, price_json, news_json)\nVALUES ('{{ $json.symbol }}', '{{ $json.price_json }}'::jsonb, '{{ $json.news_json }}'::jsonb)\nRETURNING id, symbol, created_at;",
+        "options": {}
+      },
+      "id": "insert-snapshot",
+      "name": "Save to Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1540, 300],
+      "credentials": {
+        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/analyze-and-trade",
+        "options": { "timeout": 10000 }
+      },
+      "id": "trigger-analysis",
+      "name": "Trigger Analysis Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1760, 300]
+    }
+  ],
+  "connections": {
+    "Every 30 Minutes": {
+      "main": [[{ "node": "Set Symbols", "type": "main", "index": 0 }]]
+    },
+    "Set Symbols": {
+      "main": [[{ "node": "Split Symbols", "type": "main", "index": 0 }]]
+    },
+    "Split Symbols": {
+      "main": [[{ "node": "Set Symbol", "type": "main", "index": 0 }]]
+    },
+    "Set Symbol": {
+      "main": [
+        [
+          { "node": "Alpha Vantage Price", "type": "main", "index": 0 },
+          { "node": "NewsAPI Headlines", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Alpha Vantage Price": {
+      "main": [[{ "node": "Merge Price + News", "type": "main", "index": 0 }]]
+    },
+    "NewsAPI Headlines": {
+      "main": [[{ "node": "Merge Price + News", "type": "main", "index": 1 }]]
+    },
+    "Merge Price + News": {
+      "main": [[{ "node": "Normalize Data", "type": "main", "index": 0 }]]
+    },
+    "Normalize Data": {
+      "main": [[{ "node": "Save to Postgres", "type": "main", "index": 0 }]]
+    },
+    "Save to Postgres": {
+      "main": [[{ "node": "Trigger Analysis Workflow", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{ "name": "trading-mvp" }]
+}
