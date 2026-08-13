@@ -1,6 +1,16 @@
 {
+  "id": "wf-01-data-collection",
   "name": "01 - Data Collection",
+  "active": false,
   "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 100]
+    },
     {
       "parameters": {
         "rule": {
@@ -120,13 +130,13 @@
       "typeVersion": 2.5,
       "position": [1540, 300],
       "credentials": {
-        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+        "postgres": { "id": "trading-postgres-cred", "name": "Trading Postgres" }
       }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:5678/webhook/analyze-and-trade",
+        "url": "http://127.0.0.1:5678/webhook/analyze-and-trade",
         "options": { "timeout": 10000 }
       },
       "id": "trigger-analysis",
@@ -137,6 +147,9 @@
     }
   ],
   "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Set Symbols", "type": "main", "index": 0 }]]
+    },
     "Every 30 Minutes": {
       "main": [[{ "node": "Set Symbols", "type": "main", "index": 0 }]]
     },

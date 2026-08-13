@@ -4,6 +4,9 @@
 $ErrorActionPreference = "Continue"
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
             [System.Environment]::GetEnvironmentVariable("Path", "User")
+if (Test-Path "C:\Program Files\nodejs") {
+    $env:Path = "C:\Program Files\nodejs;" + $env:Path
+}
 
 Write-Host "=== Trading System E2E Test ===" -ForegroundColor Cyan
 $passed = 0
@@ -23,23 +26,24 @@ function Test-Step {
 }
 
 Test-Step "Docker containers running" {
-    $ps = docker ps --format "{{.Names}}" 2>&1
-    if ($ps -notmatch "trading-postgres") { throw "trading-postgres not running" }
-    if ($ps -notmatch "trading-n8n") { throw "trading-n8n not running" }
-    Write-Host "  Containers: $ps"
+    $names = @(docker ps --format "{{.Names}}" 2>$null)
+    $joined = $names -join "`n"
+    if ($joined -notmatch "trading-postgres") { throw "trading-postgres not running. Got: $joined" }
+    if ($joined -notmatch "trading-n8n") { throw "trading-n8n not running. Got: $joined" }
+    Write-Host "  Containers: $($names -join ', ')"
 }
 
 Test-Step "Postgres accepts connections" {
-    $result = docker exec trading-postgres pg_isready -U trading -d trading 2>&1
-    if ($LASTEXITCODE -ne 0) { throw $result }
-    Write-Host "  $result"
+    $result = docker exec trading-postgres pg_isready -U trading -d trading 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw $result.Trim() }
+    Write-Host "  $($result.Trim())"
 }
 
 Test-Step "Database tables exist" {
-    $tables = docker exec trading-postgres psql -U trading -d trading -t -c `
-        "SELECT tablename FROM pg_tables WHERE schemaname='public';" 2>&1
     foreach ($t in @("market_snapshots", "signals", "trades")) {
-        if ($tables -notmatch $t) { throw "Missing table: $t" }
+        $exists = docker exec trading-postgres psql -U trading -d trading -tAc `
+            "SELECT to_regclass('public.$t') IS NOT NULL;" 2>$null
+        if (($exists | Out-String).Trim() -ne "t") { throw "Missing table: $t" }
     }
     Write-Host "  Tables: market_snapshots, signals, trades"
 }
@@ -52,7 +56,7 @@ Test-Step "n8n is reachable" {
 
 Test-Step "Ollama is reachable" {
     $resp = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -TimeoutSec 10
-    if (-not $resp.models) { throw "No models listed" }
+    if (-not $resp.models -or $resp.models.Count -lt 1) { throw "No models listed" }
     Write-Host "  Models: $($resp.models.Count)"
 }
 
@@ -69,20 +73,18 @@ Test-Step "Ollama generate returns JSON-like response" {
 }
 
 Test-Step "Insert test market snapshot" {
-    $sql = @"
-INSERT INTO market_snapshots (symbol, price_json, news_json)
-VALUES ('AAPL', '{"price": 180.5}', '[{"title": "Test headline"}]');
-"@
-    docker exec trading-postgres psql -U trading -d trading -c $sql | Out-Null
+    # Pipe SQL via stdin to avoid PowerShell quote mangling for docker -c
+    $sql = "INSERT INTO market_snapshots (symbol, price_json, news_json) VALUES ('AAPL', '{`"price`": 180.5}'::jsonb, '[{`"title`": `"Test headline`"}]'::jsonb);"
+    $sql | docker exec -i trading-postgres psql -U trading -d trading -v ON_ERROR_STOP=1 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Insert failed" }
     Write-Host "  Inserted test snapshot for AAPL"
 }
 
 Test-Step "Read test snapshot back" {
-    $count = docker exec trading-postgres psql -U trading -d trading -t -c `
-        "SELECT COUNT(*) FROM market_snapshots WHERE symbol='AAPL';" 2>&1
-    if ([int]$count.Trim() -lt 1) { throw "No snapshots found" }
-    Write-Host "  Snapshot count: $($count.Trim())"
+    $count = (docker exec trading-postgres psql -U trading -d trading -tAc `
+        "SELECT COUNT(*) FROM market_snapshots WHERE symbol='AAPL';" 2>$null | Out-String).Trim()
+    if (-not $count -or [int]$count -lt 1) { throw "No snapshots found (got: '$count')" }
+    Write-Host "  Snapshot count: $count"
 }
 
 Test-Step "Next.js dashboard API (if running)" {

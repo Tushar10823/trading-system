@@ -24,6 +24,8 @@ services:
     restart: unless-stopped
     ports:
       - "5678:5678"
+    env_file:
+      - .env
     environment:
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
@@ -47,6 +49,7 @@ services:
       DEFAULT_SYMBOLS: ${DEFAULT_SYMBOLS:-AAPL,MSFT}
       CONFIDENCE_THRESHOLD: ${CONFIDENCE_THRESHOLD:-70}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
     volumes:
       - n8n_data:/home/node/.n8n
       - ./n8n/workflows:/home/node/workflows:ro

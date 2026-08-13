@@ -38,3 +38,18 @@ CREATE TABLE IF NOT EXISTS trades (
 
 CREATE INDEX IF NOT EXISTS idx_trades_symbol_created
     ON trades (symbol, created_at DESC);
+
+-- Phase 5.5: n8n news feed (NewsAPI + Moneycontrol RSS), same pattern as snapshots
+CREATE TABLE IF NOT EXISTS news_feed (
+    id            SERIAL PRIMARY KEY,
+    source        VARCHAR(128) NOT NULL,
+    title         TEXT         NOT NULL,
+    description   TEXT,
+    url           TEXT,
+    region        VARCHAR(32)  NOT NULL DEFAULT 'US_GLOBAL',
+    published_at  TIMESTAMPTZ,
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_news_feed_created
+    ON news_feed (created_at DESC);

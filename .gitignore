@@ -5,3 +5,15 @@ web/.next/
 .DS_Store
 *.log
 n8n_data/
+n8n/credentials/
+
+# Python signal bot (paper trading)
+bot/venv/
+bot/.env
+bot/__pycache__/
+bot/**/__pycache__/
+bot/*.csv
+bot/logs/
+bot/output/
+*.pyc
+.Python

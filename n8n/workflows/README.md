@@ -40,9 +40,10 @@ These are passed via `docker-compose.yml` from your `.env` file:
 
 ## 4. Activate workflows
 
-1. Open workflow 02 first → save → activate (registers the webhook)
-2. Open workflow 01 → save → activate
-3. Test manually: click "Execute Workflow" on workflow 01
+1. Open workflow 02 first → save → **Publish** (registers the webhook)
+2. Open workflow 01 → save → **Publish**
+3. Import `03-phase55-news.json` → **Publish** (writes headlines into `news_feed`)
+4. Test: Execute workflow 03, then run `python bot/phase55_news_scanner.py --top 5`
 
 ## Troubleshooting
 

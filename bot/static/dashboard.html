@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paper calls — localhost</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #171e26;
+      --line: #2a3440;
+      --text: #e8eef4;
+      --muted: #8b9aab;
+      --buy: #3dd68c;
+      --sell: #ff6b6b;
+      --hold: #8b9aab;
+      --exit: #f0c14b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+    .sub { color: var(--muted); font-size: 13px; }
+    .meta { text-align: right; font-size: 13px; color: var(--muted); }
+    .meta strong { color: var(--text); font-weight: 600; }
+    .status { display: inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; }
+    .status.scanning { color: var(--exit); border-color: var(--exit); }
+    .status.error { color: var(--sell); border-color: var(--sell); }
+    main { padding: 20px 24px 40px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 10px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 1100px) {
+      .grid { grid-template-columns: 2fr 1fr; }
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 500; }
+    tr.buy td.action { color: var(--buy); font-weight: 650; }
+    tr.sell td.action { color: var(--sell); font-weight: 650; }
+    tr.exit td.action { color: var(--exit); font-weight: 650; }
+    .pill {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      margin: 0 6px 6px 0;
+    }
+    .pill.buy { color: var(--buy); border-color: var(--buy); }
+    .pill.sell { color: var(--sell); border-color: var(--sell); }
+    .events { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+    .events li { padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--muted); }
+    .events li span { color: var(--text); }
+    button {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover { border-color: var(--muted); }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .note { font-size: 12px; color: var(--muted); max-width: 280px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Intraday paper calls</h1>
+      <div class="sub">30m chart + 5m confirm · IST · not financial advice</div>
+    </div>
+    <div class="meta">
+      <div><span id="status" class="status">loading</span></div>
+      <div>Last scan: <strong id="last">—</strong></div>
+      <div>Next scan: <strong id="next">—</strong></div>
+      <div style="margin-top:8px"><button id="scan" type="button">Scan now</button></div>
+    </div>
+  </header>
+  <main>
+    <section style="margin-bottom:22px">
+      <h2>Auto-added (Buy / Sell appeared)</h2>
+      <div id="watchlist">—</div>
+    </section>
+    <div class="grid">
+      <section>
+        <h2>Board</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Stock</th>
+              <th>TV</th>
+              <th>Price</th>
+              <th>Entry</th>
+              <th>Stop</th>
+              <th>Target</th>
+              <th>Wait</th>
+              <th>30m / 5m</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="board"></tbody>
+        </table>
+      </section>
+      <section>
+        <h2>Updates</h2>
+        <ul class="events" id="events"></ul>
+      </section>
+    </div>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function rowClass(action) {
+      if (action === "BUY") return "buy";
+      if (action === "SELL") return "sell";
+      if (action === "EXIT") return "exit";
+      return "";
+    }
+
+    function tvLabel(action) {
+      if (action === "BUY") return "Buy";
+      if (action === "SELL") return "Sell";
+      if (action === "EXIT") return "Exit long";
+      return "—";
+    }
+
+    async function refresh() {
+      const res = await fetch("/api/state");
+      const s = await res.json();
+      const status = $("status");
+      status.textContent = s.status || "idle";
+      status.className = "status " + (s.status || "");
+      $("last").textContent = s.scanned_at || "—";
+      $("next").textContent = s.next_scan_in || s.next_scan_at || "—";
+      $("scan").disabled = s.status === "scanning";
+
+      const wl = s.watchlist || [];
+      const added = s.added || {};
+      if (!wl.length) {
+        $("watchlist").textContent = "None yet. Names appear here when a Buy or Sell fires.";
+      } else {
+        $("watchlist").innerHTML = wl.map((sym) => {
+          const why = (added[sym] && added[sym].reason) || "";
+          const cls = why === "SELL" ? "sell" : why === "BUY" ? "buy" : "";
+          return `<span class="pill ${cls}">${sym}${why ? " · " + why : ""}</span>`;
+        }).join("");
+      }
+
+      const calls = s.calls || [];
+      $("board").innerHTML = calls.map((c) => `
+        <tr class="${rowClass(c.action)}">
+          <td>${c.symbol}${c.auto_added ? " *" : ""}</td>
+          <td class="action">${tvLabel(c.action)}</td>
+          <td>${c.price ?? "—"}</td>
+          <td>${c.entry ?? "—"}</td>
+          <td>${c.stop ?? "—"}</td>
+          <td>${c.target ?? "—"}</td>
+          <td>${c.wait_min ? c.wait_min + "m until " + c.wait_until : "—"}</td>
+          <td>${c.signal_30m || "—"} / ${c.signal_5m || "—"}</td>
+          <td class="note">${c.confidence || ""}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="9">Waiting for first scan…</td></tr>`;
+
+      const events = s.events || [];
+      $("events").innerHTML = events.slice().reverse().slice(0, 20).map((e) =>
+        `<li><span>${e.at}</span> · ${e.text}</li>`
+      ).join("") || "<li>No flips or new Buy/Sell yet.</li>";
+    }
+
+    $("scan").addEventListener("click", async () => {
+      $("scan").disabled = true;
+      await fetch("/api/scan", { method: "POST" });
+      await refresh();
+    });
+
+    refresh();
+    setInterval(refresh, 4000);
+  </script>
+</body>
+</html>

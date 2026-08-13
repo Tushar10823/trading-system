@@ -1,5 +1,7 @@
 {
+  "id": "wf-02-analyze-and-trade",
   "name": "02 - Analyze and Trade",
+  "active": false,
   "nodes": [
     {
       "parameters": {
@@ -38,8 +40,18 @@
       "typeVersion": 2.5,
       "position": [260, 400],
       "credentials": {
-        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+        "postgres": { "id": "trading-postgres-cred", "name": "Trading Postgres" }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst symbol = item.symbol;\nconst price = typeof item.price_json === 'string' ? item.price_json : JSON.stringify(item.price_json);\nconst news = typeof item.news_json === 'string' ? item.news_json : JSON.stringify(item.news_json);\nconst model = $env.OLLAMA_MODEL || 'llama3.2';\nconst prompt = [\n  'You are a trading assistant.',\n  'Given price data and news headlines for ' + symbol + ',',\n  'respond ONLY with valid JSON (no markdown):',\n  '{\"action\":\"BUY\"|\"SELL\"|\"HOLD\",\"confidence\":0-100,\"reasoning\":\"...\"}',\n  '',\n  'Price data: ' + price,\n  '',\n  'News: ' + news\n].join('\\n');\nreturn [{ json: { symbol, model, prompt, price_json: item.price_json, news_json: item.news_json } }];"
+      },
+      "id": "build-ollama-prompt",
+      "name": "Build Ollama Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [380, 400]
     },
     {
       "parameters": {
@@ -47,18 +59,18 @@
         "url": "http://host.docker.internal:11434/api/generate",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"{{ $env.OLLAMA_MODEL || 'llama3.2' }}\",\n  \"prompt\": \"You are a trading assistant. Given price data and news headlines for {{ $json.symbol }}, respond ONLY with valid JSON (no markdown): {\\\"action\\\":\\\"BUY\\\"|\\\"SELL\\\"|\\\"HOLD\\\",\\\"confidence\\\":0-100,\\\"reasoning\\\":\\\"...\\\"}\\n\\nPrice data: {{ JSON.stringify($json.price_json) }}\\n\\nNews: {{ JSON.stringify($json.news_json) }}\",\n  \"stream\": false\n}",
+        "jsonBody": "={{ JSON.stringify({ model: $json.model, prompt: $json.prompt, stream: false }) }}",
         "options": { "timeout": 120000 }
       },
       "id": "ollama-analyze",
       "name": "Ollama Analyze",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [500, 400]
+      "position": [560, 400]
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const symbol = $('Load Latest Snapshots').item.json.symbol;\n  const rawResponse = item.json.response || '';\n  let parsed = { action: 'HOLD', confidence: 0, reasoning: 'Failed to parse LLM response' };\n\n  try {\n    const jsonMatch = rawResponse.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      parsed = JSON.parse(jsonMatch[0]);\n    }\n  } catch (e) {\n    parsed.reasoning = 'Parse error: ' + e.message;\n  }\n\n  parsed.action = (parsed.action || 'HOLD').toUpperCase();\n  parsed.confidence = Math.min(100, Math.max(0, parseInt(parsed.confidence) || 0));\n  parsed.symbol = symbol;\n  parsed.raw_llm_response = rawResponse;\n\n  results.push({ json: parsed });\n}\n\nreturn results;"
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const symbol = $('Build Ollama Prompt').item.json.symbol || $('Load Latest Snapshots').item.json.symbol;\n  const rawResponse = item.json.response || '';\n  let parsed = { action: 'HOLD', confidence: 0, reasoning: 'Failed to parse LLM response' };\n\n  try {\n    const jsonMatch = rawResponse.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      parsed = JSON.parse(jsonMatch[0]);\n    }\n  } catch (e) {\n    parsed.reasoning = 'Parse error: ' + e.message;\n  }\n\n  parsed.action = (parsed.action || 'HOLD').toUpperCase();\n  if (!['BUY', 'SELL', 'HOLD'].includes(parsed.action)) parsed.action = 'HOLD';\n  parsed.confidence = Math.min(100, Math.max(0, parseInt(parsed.confidence) || 0));\n  parsed.symbol = symbol;\n  parsed.raw_llm_response = rawResponse;\n\n  results.push({ json: parsed });\n}\n\nreturn results;"
       },
       "id": "parse-response",
       "name": "Parse LLM Response",
@@ -69,12 +81,12 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
           "conditions": [
             {
               "id": "confidence-check",
-              "leftValue": "={{ $json.confidence }}",
-              "rightValue": "={{ $env.CONFIDENCE_THRESHOLD || 70 }}",
+              "leftValue": "={{ Number($json.confidence) }}",
+              "rightValue": "={{ Number($env.CONFIDENCE_THRESHOLD || 70) }}",
               "operator": { "type": "number", "operation": "gte" }
             },
             {
@@ -106,15 +118,30 @@
       "typeVersion": 2.5,
       "position": [1220, 560],
       "credentials": {
-        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+        "postgres": { "id": "trading-postgres-cred", "name": "Trading Postgres" }
       }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $env.ALPACA_BASE_URL || 'https://paper-api.alpaca.markets' }}/v2/orders",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "APCA-API-KEY-ID",
+              "value": "={{ $env.ALPACA_API_KEY }}"
+            },
+            {
+              "name": "APCA-API-SECRET-KEY",
+              "value": "={{ $env.ALPACA_SECRET_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"symbol\": \"{{ $json.symbol }}\",\n  \"qty\": \"1\",\n  \"side\": \"{{ $json.action.toLowerCase() }}\",\n  \"type\": \"market\",\n  \"time_in_force\": \"day\"\n}",
@@ -124,10 +151,7 @@
       "name": "Alpaca Paper Order",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1220, 280],
-      "credentials": {
-        "httpHeaderAuth": { "id": "REPLACE_WITH_ALPACA_CREDENTIAL_ID", "name": "Alpaca Paper API" }
-      }
+      "position": [1220, 280]
     },
     {
       "parameters": {
@@ -141,7 +165,7 @@
       "typeVersion": 2.5,
       "position": [1460, 280],
       "credentials": {
-        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+        "postgres": { "id": "trading-postgres-cred", "name": "Trading Postgres" }
       }
     },
     {
@@ -156,7 +180,7 @@
       "typeVersion": 2.5,
       "position": [1700, 280],
       "credentials": {
-        "postgres": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Trading Postgres" }
+        "postgres": { "id": "trading-postgres-cred", "name": "Trading Postgres" }
       }
     }
   ],
@@ -168,6 +192,9 @@
       "main": [[{ "node": "Load Latest Snapshots", "type": "main", "index": 0 }]]
     },
     "Load Latest Snapshots": {
+      "main": [[{ "node": "Build Ollama Prompt", "type": "main", "index": 0 }]]
+    },
+    "Build Ollama Prompt": {
       "main": [[{ "node": "Ollama Analyze", "type": "main", "index": 0 }]]
     },
     "Ollama Analyze": {

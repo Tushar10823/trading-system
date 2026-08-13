@@ -7,10 +7,10 @@ $Installers = "E:\AI"
 Write-Host "=== Trading System MVP - Software Install ===" -ForegroundColor Cyan
 
 function Install-IfExists {
-    param([string]$Path, [string]$Args, [string]$Name)
+    param([string]$Path, [string]$InstallerArgs, [string]$Name)
     if (Test-Path $Path) {
         Write-Host "Installing $Name..." -ForegroundColor Yellow
-        $proc = Start-Process -FilePath $Path -ArgumentList $Args -Wait -PassThru
+        $proc = Start-Process -FilePath $Path -ArgumentList $InstallerArgs -Wait -PassThru
         if ($proc.ExitCode -ne 0) { Write-Warning "$Name installer exited with code $($proc.ExitCode)" }
         else { Write-Host "$Name installed." -ForegroundColor Green }
     } else {

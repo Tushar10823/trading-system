@@ -1,0 +1,148 @@
+{
+  "id": "wf-03-phase55-news",
+  "name": "03 - Phase 5.5 News Feed",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 100]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "phase55-news",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 200],
+      "webhookId": "phase55-news"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 15 }]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://newsapi.org/v2/top-headlines?category=business&language=en&pageSize=30&apiKey={{ $env.NEWS_API_KEY }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "newsapi-headlines",
+      "name": "NewsAPI Business Headlines",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://www.moneycontrol.com/rss/marketreports.xml",
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "responseFormat": "text" } }
+        }
+      },
+      "id": "moneycontrol-rss",
+      "name": "Moneycontrol RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "merge-feeds",
+      "name": "Merge News + RSS",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseRss(xml, sourceName) {\n  if (!xml || typeof xml !== 'string') return [];\n  const items = [];\n  const blocks = xml.split(/<item[\\s>]/i).slice(1);\n  for (const b of blocks.slice(0, 20)) {\n    const title = (b.match(/<title><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/title>/i) || b.match(/<title>([\\s\\S]*?)<\\/title>/i) || [])[1] || '';\n    const link = (b.match(/<link>([\\s\\S]*?)<\\/link>/i) || [])[1] || '';\n    const desc = (b.match(/<description><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/description>/i) || b.match(/<description>([\\s\\S]*?)<\\/description>/i) || [])[1] || '';\n    const pub = (b.match(/<pubDate>([\\s\\S]*?)<\\/pubDate>/i) || [])[1] || '';\n    items.push({\n      source: sourceName,\n      title: String(title).replace(/<[^>]+>/g, '').trim(),\n      description: String(desc).replace(/<[^>]+>/g, '').trim(),\n      url: String(link).trim(),\n      region: 'INDIA',\n      published_at: String(pub).trim()\n    });\n  }\n  return items;\n}\n\nconst newsApi = $('NewsAPI Business Headlines').first().json || {};\nconst articles = (newsApi.articles || []).map(a => ({\n  source: (a.source && a.source.name) || 'NewsAPI',\n  title: a.title || '',\n  description: a.description || '',\n  url: a.url || '',\n  region: 'US_GLOBAL',\n  published_at: a.publishedAt || ''\n}));\n\nlet xml = '';\ntry {\n  const raw = $('Moneycontrol RSS').first().json;\n  if (typeof raw === 'string') xml = raw;\n  else if (raw && typeof raw.data === 'string') xml = raw.data;\n} catch (e) {}\n\nconst india = parseRss(xml, 'Moneycontrol');\nconst all = [...articles, ...india].filter(a => a.title);\nreturn all.map(a => ({ json: a }));"
+      },
+      "id": "normalize",
+      "name": "Normalize Articles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO news_feed (source, title, description, url, region, published_at)\nVALUES ($1, $2, $3, $4, $5, NULLIF($6, '')::timestamptz)\nRETURNING id, source, title;",
+        "options": {
+          "queryReplacement": "={{ [$json.source, $json.title, $json.description, $json.url, $json.region, $json.published_at] }}"
+        }
+      },
+      "id": "save-postgres",
+      "name": "Save to Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [980, 300],
+      "credentials": {
+        "postgres": { "id": "trading-postgres-cred", "name": "Trading Postgres" }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          { "node": "NewsAPI Business Headlines", "type": "main", "index": 0 },
+          { "node": "Moneycontrol RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          { "node": "NewsAPI Business Headlines", "type": "main", "index": 0 },
+          { "node": "Moneycontrol RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Every 15 Minutes": {
+      "main": [
+        [
+          { "node": "NewsAPI Business Headlines", "type": "main", "index": 0 },
+          { "node": "Moneycontrol RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "NewsAPI Business Headlines": {
+      "main": [[{ "node": "Merge News + RSS", "type": "main", "index": 0 }]]
+    },
+    "Moneycontrol RSS": {
+      "main": [[{ "node": "Merge News + RSS", "type": "main", "index": 1 }]]
+    },
+    "Merge News + RSS": {
+      "main": [[{ "node": "Normalize Articles", "type": "main", "index": 0 }]]
+    },
+    "Normalize Articles": {
+      "main": [[{ "node": "Save to Postgres", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{ "name": "trading-mvp" }]
+}
