@@ -15,5 +15,6 @@ bot/**/__pycache__/
 bot/*.csv
 bot/logs/
 bot/output/
+bot/site/
 *.pyc
 .Python

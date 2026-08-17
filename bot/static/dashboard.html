@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Paper calls — localhost</title>
+  <title>Paper calls</title>
+  <meta http-equiv="refresh" content="120" />
   <style>
     :root {
       --bg: #0f1419;
@@ -81,7 +82,7 @@
   <header>
     <div>
       <h1>Intraday paper calls</h1>
-      <div class="sub">30m chart + 5m confirm · IST · not financial advice</div>
+      <div class="sub">30m chart + 5m confirm · IST · paper research, not financial advice</div>
     </div>
     <div class="meta">
       <div><span id="status" class="status">loading</span></div>
@@ -138,14 +139,37 @@
       return "—";
     }
 
+    let hosted = false;
+
+    async function loadState() {
+      const urls = ["/api/state", "./state.json"];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url + (url.endsWith(".json") ? "?t=" + Date.now() : ""), { cache: "no-store" });
+          if (!res.ok) continue;
+          const data = await res.json();
+          hosted = url.includes("/api/");
+          return data;
+        } catch (err) {
+          /* try next */
+        }
+      }
+      return null;
+    }
+
     async function refresh() {
-      const res = await fetch("/api/state");
-      const s = await res.json();
+      const s = await loadState();
+      if (!s) {
+        $("status").textContent = "offline";
+        $("status").className = "status error";
+        return;
+      }
+      $("scan").style.display = hosted ? "" : "none";
       const status = $("status");
       status.textContent = s.status || "idle";
       status.className = "status " + (s.status || "");
       $("last").textContent = s.scanned_at || "—";
-      $("next").textContent = s.next_scan_in || s.next_scan_at || "—";
+      $("next").textContent = s.next_scan_in || "every 30 min (cloud)";
       $("scan").disabled = s.status === "scanning";
 
       const wl = s.watchlist || [];
@@ -182,6 +206,7 @@
     }
 
     $("scan").addEventListener("click", async () => {
+      if (!hosted) return;
       $("scan").disabled = true;
       await fetch("/api/scan", { method: "POST" });
       await refresh();

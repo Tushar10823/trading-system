@@ -25,7 +25,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from phase55_news_scanner import ALWAYS_INCLUDE, collect_scan
-from phase55_watch import evaluate_changes, snapshot_actionable
+from phase55_watch import ACTIONABLE, evaluate_changes, snapshot_actionable
 from intraday_calls import is_regular_market_hours, minutes_to_close, log_calls
 
 ROOT = Path(__file__).resolve().parent
@@ -33,6 +33,8 @@ OUTPUT_DIR = ROOT / "output"
 HTML_FILE = ROOT / "static" / "dashboard.html"
 WATCHLIST_FILE = OUTPUT_DIR / "dynamic_watchlist.json"
 STATE_FILE = OUTPUT_DIR / "dashboard_state.json"
+PREV_STATE_FILE = OUTPUT_DIR / "prev_state.json"
+SITE_DIR = ROOT / "site"
 IST = ZoneInfo("Asia/Kolkata")
 
 LOCK = threading.Lock()
@@ -78,6 +80,52 @@ def save_watchlist(symbols: list[str], added: dict[str, Any]) -> None:
         json.dumps({"symbols": symbols, "added": added, "saved_at": now_ist()}, indent=2),
         encoding="utf-8",
     )
+
+
+def restore_from_prev() -> None:
+    """Reload watchlist/events from the last published board (used in GitHub Actions)."""
+    global PREVIOUS_ACTIONABLE
+    if not PREV_STATE_FILE.exists():
+        return
+    try:
+        data = json.loads(PREV_STATE_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return
+    symbols = [str(s).upper() for s in data.get("watchlist") or []]
+    added = data.get("added") or {}
+    if symbols:
+        save_watchlist(symbols, added)
+    prev_calls: dict[str, dict[str, Any]] = {}
+    for c in data.get("calls") or []:
+        if c.get("action") in ACTIONABLE and c.get("symbol"):
+            prev_calls[str(c["symbol"]).upper()] = {
+                "action": c.get("action"),
+                "price": c.get("price"),
+                "entry": c.get("entry"),
+                "stop": c.get("stop"),
+                "target": c.get("target"),
+                "wait_min": c.get("wait_min", 30),
+                "wait_until": c.get("wait_until", "-"),
+                "wait_until_iso": c.get("wait_until_iso", ""),
+                "confidence": c.get("confidence", ""),
+            }
+    PREVIOUS_ACTIONABLE = prev_calls
+    with LOCK:
+        STATE["events"] = list(data.get("events") or [])[-80:]
+        STATE["watchlist"] = symbols or list(ALWAYS_INCLUDE)
+        STATE["added"] = added
+
+
+def export_site(site_dir: Path) -> None:
+    site_dir.mkdir(parents=True, exist_ok=True)
+    html = HTML_FILE.read_text(encoding="utf-8")
+    (site_dir / "index.html").write_text(html, encoding="utf-8")
+    (site_dir / ".nojekyll").write_text("", encoding="utf-8")
+    (site_dir / "state.json").write_text(
+        json.dumps(public_state(), indent=2, default=str),
+        encoding="utf-8",
+    )
+    print(f"Wrote static site -> {site_dir}")
 
 
 def persist_state() -> None:
@@ -270,13 +318,25 @@ def main() -> None:
     )
     parser.add_argument("--interval", type=int, default=30, help="Minutes between scans")
     parser.add_argument("--top", type=int, default=10, help="Heat names to scan besides watchlist")
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Run one scan, write bot/site for GitHub Pages, then exit",
+    )
+    parser.add_argument("--site-dir", default=str(SITE_DIR))
     args = parser.parse_args()
     CFG["top"] = max(1, args.top)
     CFG["interval"] = max(1, args.interval)
 
+    restore_from_prev()
     with LOCK:
         STATE["interval_min"] = CFG["interval"]
         STATE["watchlist"], STATE["added"] = load_watchlist()
+
+    if args.once:
+        run_scan(CFG["top"], CFG["interval"])
+        export_site(Path(args.site_dir))
+        return
 
     worker = threading.Thread(target=loop, args=(CFG["top"], CFG["interval"]), daemon=True)
     worker.start()

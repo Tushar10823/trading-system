@@ -168,3 +168,13 @@ The dashboard must keep running **on this PC**. Cursor on the phone cannot start
 
 If it does not load, allow Python through Windows Firewall for private networks. Keys stay in `bot/.env` on this PC and are never pushed to GitHub.
 
+## Phone website (PC can be off)
+
+GitHub Actions scans every 30 minutes and publishes the board to GitHub Pages:
+
+**https://tushar10823.github.io/trading-system/**
+
+Bookmark that URL on your phone. No local Python process is required.
+
+Repo secrets (Settings → Secrets and variables → Actions): `ALPACA_API_KEY`, `ALPACA_SECRET_KEY`, optional `NEWS_API_KEY`. Paper keys only. The board page is public — it shows calls, not API keys.
+

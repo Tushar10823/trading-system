@@ -1,0 +1,54 @@
+name: Publish paper dashboard
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "bot/**"
+      - ".github/workflows/publish-dashboard.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-dashboard
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: pip install -r bot/requirements.txt
+
+      - name: Restore previous board
+        continue-on-error: true
+        run: |
+          mkdir -p bot/output
+          curl -fsSL "https://tushar10823.github.io/trading-system/state.json" -o bot/output/prev_state.json || true
+
+      - name: Scan and build site
+        working-directory: bot
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          ALPACA_BASE_URL: ${{ secrets.ALPACA_BASE_URL }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+        run: python -u dashboard.py --once --top 10 --interval 30
+
+      - name: Publish GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: bot/site
+          force_orphan: true
