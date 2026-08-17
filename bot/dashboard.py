@@ -222,7 +222,7 @@ def run_scan(top_n: int, interval_min: int) -> None:
 
         fills: list[dict[str, Any]] = []
         paper: dict[str, Any] = {}
-        if CFG.get("paper_book") and not CFG.get("once"):
+        if CFG.get("paper_book"):
             from internal_paper import apply_new_calls, public_book
 
             _book, paper_notes = apply_new_calls(calls, int(CFG.get("qty", 10)))
