@@ -39,9 +39,18 @@ from signal_engine import combine_labels
 INTRADAY_BUY_THRESHOLD = 1.0
 INTRADAY_SELL_THRESHOLD = -1.0
 
-# Early in / early out scalp (tighter than swing)
-STOP_LOSS_PCT = 0.004   # 0.4%
-TAKE_PROFIT_PCT = 0.007  # 0.7%
+# Early in / early out scalp — sized from 30m ATR so quiet names (AAPL)
+# get nearer targets than fast names (AVGO). Old 0.4%/0.7% was too far
+# for a 30-minute hold on mega-caps.
+STOP_ATR_MULT = 0.85
+TARGET_ATR_MULT = 1.05
+MIN_STOP_PCT = 0.0012   # 0.12%
+MAX_STOP_PCT = 0.0045   # 0.45%
+MIN_TARGET_PCT = 0.0018 # 0.18%
+MAX_TARGET_PCT = 0.0055 # 0.55%
+# Fallback if ATR cannot be computed
+STOP_LOSS_PCT = 0.0025
+TAKE_PROFIT_PCT = 0.0035
 # Stay in the call this long before reversing (unless SL/TP hits)
 HOLD_MINUTES = 30
 FLATTEN_MINUTES = 20
@@ -104,7 +113,7 @@ def decide_call(primary: dict[str, Any], confirm: dict[str, Any]) -> tuple[str, 
     if p == "BUY" and c == "BUY":
         return "BUY", "BUY confirmed: 30m+5m"
     if p == "BUY":
-        return "BUY", "BUY: 30m BUY (5m not opposing)"
+        return "HOLD", "blocked: 30m BUY needs 5m BUY"
     if p == "SELL" and c == "SELL":
         return "SELL", "SELL confirmed: 30m+5m (short)"
     if p == "SELL":
@@ -112,21 +121,55 @@ def decide_call(primary: dict[str, Any], confirm: dict[str, Any]) -> tuple[str, 
     return "HOLD", "no setup"
 
 
-def trade_plan(action: str, price: float) -> dict[str, float | str]:
+def median_bar_range(df: pd.DataFrame, bars: int = 20) -> float:
+    window = df.tail(max(bars, 5))
+    return float((window["high"] - window["low"]).median())
+
+
+def atr_value(df: pd.DataFrame, length: int = 14) -> float:
+    high = df["high"]
+    low = df["low"]
+    close = df["close"]
+    prev = close.shift(1)
+    tr = pd.concat(
+        [(high - low).abs(), (high - prev).abs(), (low - prev).abs()],
+        axis=1,
+    ).max(axis=1)
+    atr = float(tr.tail(length).mean())
+    typical = median_bar_range(df)
+    return max(atr, typical * 0.6, 0.0)
+
+
+def clip_pct(value: float, lo: float, hi: float) -> float:
+    return min(max(value, lo), hi)
+
+
+def sl_tp_pct(price: float, atr: float) -> tuple[float, float]:
+    """Stop/target as fractions of price, scaled to 30m movement."""
+    if price <= 0 or atr <= 0:
+        return STOP_LOSS_PCT, TAKE_PROFIT_PCT
+    stop_pct = clip_pct(STOP_ATR_MULT * atr / price, MIN_STOP_PCT, MAX_STOP_PCT)
+    target_pct = clip_pct(TARGET_ATR_MULT * atr / price, MIN_TARGET_PCT, MAX_TARGET_PCT)
+    if target_pct < stop_pct * 1.1:
+        target_pct = clip_pct(stop_pct * 1.15, MIN_TARGET_PCT, MAX_TARGET_PCT)
+    return stop_pct, target_pct
+
+
+def trade_plan(action: str, price: float, stop_pct: float, target_pct: float) -> dict[str, float | str]:
     px = round(price, 2)
     if action == "BUY":
         return {
             "side": "BUY",
             "entry": px,
-            "stop": round(price * (1 - STOP_LOSS_PCT), 2),
-            "target": round(price * (1 + TAKE_PROFIT_PCT), 2),
+            "stop": round(price * (1 - stop_pct), 2),
+            "target": round(price * (1 + target_pct), 2),
         }
     if action == "SELL":
         return {
             "side": "SELL",
             "entry": px,
-            "stop": round(price * (1 + STOP_LOSS_PCT), 2),
-            "target": round(price * (1 - TAKE_PROFIT_PCT), 2),
+            "stop": round(price * (1 + stop_pct), 2),
+            "target": round(price * (1 - target_pct), 2),
         }
     if action == "EXIT":
         return {"side": "FLATTEN_LONG", "entry": px, "stop": "-", "target": "-"}
@@ -141,7 +184,9 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
     primary = score_frame(df30)
     confirm = score_frame(df5)
     action, note = decide_call(primary, confirm)
-    plan = trade_plan(action, price)
+    atr = atr_value(df30)
+    stop_pct, target_pct = sl_tp_pct(price, atr)
+    plan = trade_plan(action, price, stop_pct, target_pct)
 
     mtc = minutes_to_close()
     if is_regular_market_hours() and mtc <= FLATTEN_MINUTES and action in ("BUY", "SELL"):
@@ -150,7 +195,7 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
             note = f"flatten window {mtc}m to close — no new sells; cover/exit"
         else:
             note = f"no new buys - {mtc}m to close (flatten window)"
-        plan = trade_plan(action, price)
+        plan = trade_plan(action, price, stop_pct, target_pct)
 
     wait_min = 0 if action in ("HOLD", "EXIT") else min(HOLD_MINUTES, max(mtc, 0) if is_regular_market_hours() else HOLD_MINUTES)
     if action in ("BUY", "SELL") and wait_min < 5:
@@ -177,6 +222,9 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
         "wait_min": wait_min,
         "wait_until": wait_until,
         "wait_until_iso": wait_until_iso,
+        "atr": round(atr, 4),
+        "stop_pct": round(stop_pct * 100, 3),
+        "target_pct": round(target_pct * 100, 3),
         "reasoning_5m": primary["reasoning"],
     }
 
@@ -239,8 +287,8 @@ def print_calls(rows: list[dict[str, Any]]) -> None:
             f"no new buys/sells inside {FLATTEN_MINUTES}m of close"
         )
     print(
-        f"Rules: 30m chart + 5m confirm | BUY / SELL | hold {HOLD_MINUTES}m | "
-        f"SL {STOP_LOSS_PCT:.1%} / TP {TAKE_PROFIT_PCT:.1%}"
+        f"Rules: 30m+5m both agree | hold {HOLD_MINUTES}m | "
+        f"SL/TP from 30m ATR (not a fixed 0.7% target)"
     )
     print("=" * 72)
 
@@ -278,7 +326,8 @@ def print_calls(rows: list[dict[str, Any]]) -> None:
                 how = "EXIT (close long; do not open short)"
             print(
                 f"  {how:40} {r['symbol']:5} @ {r['entry']} | "
-                f"stop {r['stop']} | target {r['target']} | "
+                f"stop {r['stop']} ({r.get('stop_pct', '?')}%) | "
+                f"target {r['target']} ({r.get('target_pct', '?')}%) | "
                 f"wait {r.get('wait_min', HOLD_MINUTES)}m (don't reverse before {r.get('wait_until', '-')})"
             )
     print(f"\nLogged -> {CALL_LOG}")
