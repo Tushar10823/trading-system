@@ -39,15 +39,14 @@ from signal_engine import combine_labels
 INTRADAY_BUY_THRESHOLD = 1.0
 INTRADAY_SELL_THRESHOLD = -1.0
 
-# Early in / early out scalp — sized from 30m ATR so quiet names (AAPL)
-# get nearer targets than fast names (AVGO). Old 0.4%/0.7% was too far
-# for a 30-minute hold on mega-caps.
-STOP_ATR_MULT = 0.85
-TARGET_ATR_MULT = 1.05
+# Paper fills 17 Aug IST: AAPL +$0.40/sh (~0.13%), AVGO +$1.00/sh (~0.25%).
+# Aim first target near that, still scaled by 30m ATR (AVGO keeps a bigger $ target).
+STOP_ATR_MULT = 0.80
+TARGET_ATR_MULT = 0.70
 MIN_STOP_PCT = 0.0012   # 0.12%
-MAX_STOP_PCT = 0.0045   # 0.45%
-MIN_TARGET_PCT = 0.0018 # 0.18%
-MAX_TARGET_PCT = 0.0055 # 0.55%
+MAX_STOP_PCT = 0.0040   # 0.40%
+MIN_TARGET_PCT = 0.0013 # 0.13%  (AAPL realized)
+MAX_TARGET_PCT = 0.0040 # 0.40%  (cap so we do not stretch back to 0.7%)
 # Fallback if ATR cannot be computed
 STOP_LOSS_PCT = 0.0025
 TAKE_PROFIT_PCT = 0.0035

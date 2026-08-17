@@ -51,6 +51,8 @@ STATE: dict[str, Any] = {
     "error": "",
     "market_open": False,
     "minutes_to_close": 0,
+    "auto_trade": False,
+    "fills": [],
 }
 PREVIOUS_ACTIONABLE: dict[str, dict[str, Any]] = {}
 WAKE = threading.Event()
@@ -125,6 +127,9 @@ def export_site(site_dir: Path) -> None:
         json.dumps(public_state(), indent=2, default=str),
         encoding="utf-8",
     )
+    book_src = OUTPUT_DIR / "internal_paper.json"
+    if book_src.exists():
+        (site_dir / "paper.json").write_text(book_src.read_text(encoding="utf-8"), encoding="utf-8")
     print(f"Wrote static site -> {site_dir}")
 
 
@@ -214,6 +219,34 @@ def run_scan(top_n: int, interval_min: int) -> None:
             events.append({"at": stamp, "text": line})
         for sym in new_adds:
             events.append({"at": stamp, "text": f"ADDED {sym} to board (Buy/Sell required)"})
+
+        fills: list[dict[str, Any]] = []
+        paper: dict[str, Any] = {}
+        if CFG.get("paper_book") and not CFG.get("once"):
+            from internal_paper import apply_new_calls, public_book
+
+            _book, paper_notes = apply_new_calls(calls, int(CFG.get("qty", 10)))
+            for line in paper_notes:
+                events.append({"at": stamp, "text": f"PAPER {line}"})
+                print(f"  PAPER {line}")
+            paper = public_book()
+        if CFG.get("auto_trade") and not CFG.get("once"):
+            from paper_exec import arm_from_calls, execute_new_calls, load_last_actions
+
+            if not load_last_actions():
+                arm_from_calls(calls)
+                events.append(
+                    {
+                        "at": stamp,
+                        "text": "ALPACA PAPER auto-trade armed — next NEW/FLIP Buy/Sell sends 10-share paper orders (not TradingView)",
+                    }
+                )
+                print("  auto-trade armed (no basket of orders on this scan)")
+            else:
+                fills = execute_new_calls(calls, int(CFG.get("qty", 10)))
+                for fill in fills:
+                    events.append({"at": stamp, "text": f"ALPACA {fill.get('notes')}"})
+
         events = events[-80:]
 
         next_at = datetime.now(IST) + timedelta(minutes=interval_min)
@@ -231,6 +264,10 @@ def run_scan(top_n: int, interval_min: int) -> None:
                     "market_open": is_regular_market_hours(),
                     "minutes_to_close": minutes_to_close() if is_regular_market_hours() else 0,
                     "error": "",
+                    "auto_trade": bool(CFG.get("auto_trade")),
+                    "paper_book": bool(CFG.get("paper_book")),
+                    "paper": paper,
+                    "fills": fills[-20:],
                 }
             )
         persist_state()
@@ -291,7 +328,14 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, b"not found", "text/plain")
 
 
-CFG: dict[str, int] = {"top": 10, "interval": 30}
+CFG: dict[str, Any] = {
+    "top": 10,
+    "interval": 30,
+    "auto_trade": False,
+    "paper_book": True,
+    "qty": 10,
+    "once": False,
+}
 
 
 def _lan_ip() -> str:
@@ -324,9 +368,19 @@ def main() -> None:
         help="Run one scan, write bot/site for GitHub Pages, then exit",
     )
     parser.add_argument("--site-dir", default=str(SITE_DIR))
+    parser.add_argument(
+        "--auto-trade",
+        action="store_true",
+        help="Place Alpaca PAPER orders (10 shares) on new Buy/Sell. Not TradingView.",
+    )
+    parser.add_argument("--qty", type=int, default=10, help="Paper shares per new Buy/Sell")
     args = parser.parse_args()
     CFG["top"] = max(1, args.top)
     CFG["interval"] = max(1, args.interval)
+    CFG["auto_trade"] = bool(args.auto_trade) and not args.once
+    CFG["paper_book"] = True
+    CFG["qty"] = max(1, args.qty)
+    CFG["once"] = bool(args.once)
 
     restore_from_prev()
     with LOCK:
@@ -347,7 +401,12 @@ def main() -> None:
     if lan:
         print(f"On your phone (same Wi-Fi): http://{lan}:{args.port}")
     print(f"Scan every {CFG['interval']} min · top {CFG['top']} + auto-added Buy/Sell names")
-    print("Paper research only. Keep this PC awake. Ctrl+C to stop.")
+    if CFG["paper_book"]:
+        print(f"Paper book ON this page · {CFG['qty']} shares · starting $100,000 fake cash")
+        print("Not TradingView and not Alpaca. Watch positions on http://127.0.0.1:8787")
+    if CFG["auto_trade"]:
+        print("Also sending Alpaca paper orders (optional).")
+    print("Keep this PC awake. Ctrl+C to stop.")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

@@ -83,6 +83,7 @@
     <div>
       <h1>Intraday paper calls</h1>
       <div class="sub">30m chart + 5m confirm · IST · paper research, not financial advice</div>
+      <div class="sub" id="broker">Orders: log only</div>
     </div>
     <div class="meta">
       <div><span id="status" class="status">loading</span></div>
@@ -92,6 +93,27 @@
     </div>
   </header>
   <main>
+    <section style="margin-bottom:22px">
+      <h2>Paper account (this page · 10 shares · $100,000 fake)</h2>
+      <div class="sub" id="paper-summary">—</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Stock</th>
+            <th>Side</th>
+            <th>Qty</th>
+            <th>Entry</th>
+            <th>Last</th>
+            <th>Stop</th>
+            <th>Target</th>
+            <th>P&amp;L $</th>
+          </tr>
+        </thead>
+        <tbody id="positions"></tbody>
+      </table>
+      <h2 style="margin-top:18px">Fills</h2>
+      <ul class="events" id="fills"></ul>
+    </section>
     <section style="margin-bottom:22px">
       <h2>Auto-added (Buy / Sell appeared)</h2>
       <div id="watchlist">—</div>
@@ -169,8 +191,37 @@
       status.textContent = s.status || "idle";
       status.className = "status " + (s.status || "");
       $("last").textContent = s.scanned_at || "—";
-      $("next").textContent = s.next_scan_in || "every 30 min (cloud)";
+      $("next").textContent = s.next_scan_in || "every 30 min";
       $("scan").disabled = s.status === "scanning";
+      $("broker").textContent = s.paper_book
+        ? "Auto-fill: paper book on this page (not TradingView, not Alpaca)"
+        : (s.auto_trade ? "Auto-trade: Alpaca PAPER" : "Orders: log only");
+      const paper = s.paper || {};
+      if (s.paper_book || s.paper) {
+        const tot = paper.total_pnl;
+        const totTxt = tot == null ? "—" : ((tot >= 0 ? "+" : "") + tot.toFixed(2));
+        $("paper-summary").textContent =
+          `Equity $${Number(paper.equity || 0).toFixed(2)} · cash $${Number(paper.cash || 0).toFixed(2)} · ` +
+          `open P&L $${Number(paper.open_pnl || 0).toFixed(2)} · realized $${Number(paper.realized_pnl || 0).toFixed(2)} · total ${totTxt}`;
+        const pos = paper.positions || [];
+        $("positions").innerHTML = pos.length
+          ? pos.map((p) => `
+            <tr class="${p.side === "long" ? "buy" : "sell"}">
+              <td>${p.symbol}</td>
+              <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
+              <td>${p.qty}</td>
+              <td>${p.entry}</td>
+              <td>${p.last}</td>
+              <td>${p.stop}</td>
+              <td>${p.target}</td>
+              <td>${p.pnl >= 0 ? "+" : ""}${Number(p.pnl).toFixed(2)}</td>
+            </tr>`).join("")
+          : `<tr><td colspan="8">No open paper position yet. Next new Buy/Sell fills 10 shares here.</td></tr>`;
+        const fills = paper.trades || [];
+        $("fills").innerHTML = fills.length
+          ? fills.map((t) => `<li><span>${t.at}</span> · ${t.notes}${t.pnl ? " · $" + t.pnl : ""}</li>`).join("")
+          : "<li>No fills yet.</li>";
+      }
 
       const wl = s.watchlist || [];
       const added = s.added || {};

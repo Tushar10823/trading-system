@@ -36,6 +36,7 @@ jobs:
         run: |
           mkdir -p bot/output
           curl -fsSL "https://tushar10823.github.io/trading-system/state.json" -o bot/output/prev_state.json || true
+          curl -fsSL "https://tushar10823.github.io/trading-system/paper.json" -o bot/output/internal_paper.json || true
 
       - name: Scan and build site
         working-directory: bot
