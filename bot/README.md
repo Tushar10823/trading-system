@@ -11,6 +11,18 @@ Built phase-by-phase from the project build spec. **Paper trading only.**
 
 ## Setup
 
+**Linux / macOS:**
+
+```bash
+cd trading-system/bot
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+**Windows:**
+
 ```powershell
 cd E:\AI\trading-system\bot
 python -m venv venv
