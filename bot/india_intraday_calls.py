@@ -89,6 +89,7 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
     )
     wait_until_dt = datetime.now(IST) + timedelta(minutes=wait_min) if wait_min else None
     wait_until = wait_until_dt.strftime("%H:%M IST") if wait_until_dt else "-"
+    wait_until_iso = wait_until_dt.isoformat() if wait_until_dt else ""
 
     target_inr = round(abs(price * target_pct), 2)
     stop_inr = round(abs(price * stop_pct), 2)
@@ -109,6 +110,7 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
         "target": plan["target"],
         "wait_min": wait_min,
         "wait_until": wait_until,
+        "wait_until_iso": wait_until_iso,
         "atr": round(atr, 4),
         "atr_pct": round(atr / price * 100, 3) if price else 0,
         "stop_pct": round(stop_pct * 100, 3),
