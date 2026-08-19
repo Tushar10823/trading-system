@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Paper calls</title>
-  <meta http-equiv="refresh" content="120" />
   <style>
     :root {
       --bg: #0f1419;
@@ -51,6 +50,10 @@
     tr.buy td.action { color: var(--buy); font-weight: 650; }
     tr.sell td.action { color: var(--sell); font-weight: 650; }
     tr.exit td.action { color: var(--exit); font-weight: 650; }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover td { background: #1e2730; }
+    #tvwrap { height: 520px; border: 1px solid var(--line); margin-top: 8px; }
+    #tvwrap iframe { width: 100%; height: 100%; border: 0; }
     .pill {
       display: inline-block;
       font-size: 12px;
@@ -93,6 +96,16 @@
     </div>
   </header>
   <main>
+    <section style="margin-bottom:22px">
+      <h2>TradingView chart (30m) · tap a stock on the board</h2>
+      <div class="sub">
+        Showing <strong id="tvlabel">—</strong>
+        · <a id="tvlink" href="https://www.tradingview.com/" target="_blank" rel="noopener" style="color:#8b9aab">Open in TradingView</a>
+      </div>
+      <div id="tvwrap">
+        <iframe id="tvframe" title="TradingView chart" allowtransparency="true" scrolling="no"></iframe>
+      </div>
+    </section>
     <section style="margin-bottom:22px">
       <h2>Paper account (this page · 10 shares · $100,000 fake)</h2>
       <div class="sub" id="paper-summary">—</div>
@@ -162,6 +175,47 @@
     }
 
     let hosted = false;
+    let chartSymbol = "";
+
+    const TV_EXCHANGE = {
+      SPY: "AMEX",
+      QQQ: "NASDAQ",
+      BABA: "NYSE",
+      CRM: "NYSE",
+      PLTR: "NYSE",
+      SMCI: "NASDAQ",
+      MSTR: "NASDAQ",
+      BRK: "NYSE",
+    };
+
+    function tvSymbol(sym) {
+      const s = String(sym || "").toUpperCase().replace("*", "").trim();
+      const ex = TV_EXCHANGE[s] || "NASDAQ";
+      return ex + ":" + s;
+    }
+
+    function tvEmbed(sym) {
+      const t = encodeURIComponent(tvSymbol(sym));
+      return (
+        "https://www.tradingview.com/widgetembed/?frameElementId=tvchart&symbol=" + t +
+        "&interval=30&hidesidetoolbar=0&symboledit=1&saveimage=0&theme=dark&style=1" +
+        "&timezone=Asia%2FKolkata&locale=en&withdateranges=1&hideideas=1"
+      );
+    }
+
+    function tvPage(sym) {
+      return "https://www.tradingview.com/chart/?symbol=" + encodeURIComponent(tvSymbol(sym));
+    }
+
+    function showChart(sym) {
+      const s = String(sym || "").toUpperCase().replace("*", "").trim();
+      if (!s) return;
+      $("tvlabel").textContent = tvSymbol(s) + " · 30 minute";
+      $("tvlink").href = tvPage(s);
+      if (s === chartSymbol) return;
+      chartSymbol = s;
+      $("tvframe").src = tvEmbed(s);
+    }
 
     async function loadState() {
       const urls = ["/api/state", "./state.json"];
@@ -206,7 +260,7 @@
         const pos = paper.positions || [];
         $("positions").innerHTML = pos.length
           ? pos.map((p) => `
-            <tr class="${p.side === "long" ? "buy" : "sell"}">
+            <tr class="${p.side === "long" ? "buy" : "sell"} clickable" data-symbol="${p.symbol}">
               <td>${p.symbol}</td>
               <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
               <td>${p.qty}</td>
@@ -217,6 +271,9 @@
               <td>${p.pnl >= 0 ? "+" : ""}${Number(p.pnl).toFixed(2)}</td>
             </tr>`).join("")
           : `<tr><td colspan="8">No open paper position yet. Next new Buy/Sell fills 10 shares here.</td></tr>`;
+        $("positions").querySelectorAll("tr[data-symbol]").forEach((row) => {
+          row.addEventListener("click", () => showChart(row.getAttribute("data-symbol")));
+        });
         const fills = paper.trades || [];
         $("fills").innerHTML = fills.length
           ? fills.map((t) => `<li><span>${t.at}</span> · ${t.notes}${t.pnl ? " · $" + t.pnl : ""}</li>`).join("")
@@ -231,13 +288,16 @@
         $("watchlist").innerHTML = wl.map((sym) => {
           const why = (added[sym] && added[sym].reason) || "";
           const cls = why === "SELL" ? "sell" : why === "BUY" ? "buy" : "";
-          return `<span class="pill ${cls}">${sym}${why ? " · " + why : ""}</span>`;
+          return `<span class="pill ${cls}" data-symbol="${sym}" style="cursor:pointer">${sym}${why ? " · " + why : ""}</span>`;
         }).join("");
+        $("watchlist").querySelectorAll("[data-symbol]").forEach((el) => {
+          el.addEventListener("click", () => showChart(el.getAttribute("data-symbol")));
+        });
       }
 
       const calls = s.calls || [];
       $("board").innerHTML = calls.map((c) => `
-        <tr class="${rowClass(c.action)}">
+        <tr class="${rowClass(c.action)} clickable" data-symbol="${c.symbol}">
           <td>${c.symbol}${c.auto_added ? " *" : ""}</td>
           <td class="action">${tvLabel(c.action)}</td>
           <td>${c.price ?? "—"}</td>
@@ -249,6 +309,13 @@
           <td class="note">${c.confidence || ""}</td>
         </tr>
       `).join("") || `<tr><td colspan="9">Waiting for first scan…</td></tr>`;
+      $("board").querySelectorAll("tr[data-symbol]").forEach((row) => {
+        row.addEventListener("click", () => showChart(row.getAttribute("data-symbol")));
+      });
+      if (!chartSymbol) {
+        const first = calls.find((c) => c.action === "BUY" || c.action === "SELL") || calls[0];
+        if (first) showChart(first.symbol);
+      }
 
       const events = s.events || [];
       $("events").innerHTML = events.slice().reverse().slice(0, 20).map((e) =>
