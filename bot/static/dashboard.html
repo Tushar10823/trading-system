@@ -39,20 +39,11 @@
     .status.error { color: var(--sell); border-color: var(--sell); }
     .tabs {
       display: flex;
-      gap: 0;
-      padding: 0 24px;
+      gap: 12px;
+      padding: 12px 24px;
       border-bottom: 1px solid var(--line);
     }
-    .tabs button {
-      border: 0;
-      border-bottom: 2px solid transparent;
-      border-radius: 0;
-      padding: 10px 16px;
-      color: var(--muted);
-      margin-bottom: -1px;
-    }
-    .tabs button:hover { border-color: transparent; color: var(--text); }
-    .tabs button.active { color: var(--text); border-bottom-color: var(--text); }
+    .tabs-bottom { border-bottom: 0; border-top: 1px solid var(--line); margin-top: 28px; padding: 16px 0 0; }
     main { padding: 20px 24px 40px; }
     .panel { display: none; }
     .panel.active { display: block; }
@@ -96,16 +87,21 @@
     button:hover { border-color: var(--muted); }
     button:disabled { opacity: 0.5; cursor: default; }
     .note { font-size: 12px; color: var(--muted); max-width: 280px; }
-    .tabs button {
-      border: 0;
-      border-bottom: 2px solid transparent;
-      border-radius: 0;
-      padding: 10px 16px;
-      color: var(--muted);
-      margin-bottom: -1px;
+    .tab-btn {
+      flex: 1;
+      min-height: 48px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      color: var(--text);
     }
-    .tabs button:hover { color: var(--text); border-color: transparent; }
-    .tabs button.active { color: var(--text); border-bottom-color: var(--text); }
+    .tab-btn:hover { border-color: var(--muted); }
+    .tab-btn.active {
+      border-color: var(--text);
+      background: #24303c;
+    }
   </style>
 </head>
 <body>
@@ -123,8 +119,8 @@
     </div>
   </header>
   <nav class="tabs" aria-label="Page sections">
-    <button type="button" class="active" data-tab="predictions">Predictions</button>
-    <button type="button" data-tab="pnl">P&amp;L and charts</button>
+    <button type="button" class="tab-btn active" data-tab="predictions">Predictions</button>
+    <button type="button" class="tab-btn" data-tab="pnl">P&amp;L and charts</button>
   </nav>
   <main>
     <div id="panel-predictions" class="panel active">
@@ -157,6 +153,10 @@
           <h2>Updates</h2>
           <ul class="events" id="events"></ul>
         </section>
+      </div>
+      <div class="tabs tabs-bottom">
+        <button type="button" class="tab-btn active" data-tab="predictions">Predictions</button>
+        <button type="button" class="tab-btn" data-tab="pnl">P&amp;L and charts</button>
       </div>
     </div>
 
@@ -192,6 +192,10 @@
           <iframe id="tvframe" title="TradingView chart" allowtransparency="true" scrolling="no"></iframe>
         </div>
       </section>
+      <div class="tabs tabs-bottom">
+        <button type="button" class="tab-btn" data-tab="predictions">Predictions</button>
+        <button type="button" class="tab-btn" data-tab="pnl">P&amp;L and charts</button>
+      </div>
     </div>
   </main>
   <script>
@@ -212,7 +216,7 @@
     }
 
     function setTab(name) {
-      document.querySelectorAll(".tabs button").forEach((btn) => {
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.getAttribute("data-tab") === name);
       });
       document.querySelectorAll(".panel").forEach((panel) => {
@@ -375,8 +379,11 @@
       ).join("") || "<li>No flips or new Buy/Sell yet.</li>";
     }
 
-    document.querySelectorAll(".tabs button").forEach((btn) => {
-      btn.addEventListener("click", () => setTab(btn.getAttribute("data-tab")));
+    document.addEventListener("click", (ev) => {
+      const btn = ev.target.closest(".tab-btn");
+      if (!btn) return;
+      ev.preventDefault();
+      setTab(btn.getAttribute("data-tab"));
     });
 
     $("scan").addEventListener("click", async () => {
