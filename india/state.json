@@ -1,0 +1,607 @@
+{
+  "status": "idle",
+  "market": "NSE",
+  "scanned_at": "2026-09-16 01:15 IST",
+  "next_scan_at": "2026-09-16T01:45:38.663567+05:30",
+  "interval_min": 30,
+  "watchlist": [
+    "RELIANCE",
+    "TCS",
+    "HDFCBANK",
+    "INFY",
+    "ICICIBANK",
+    "BHARTIARTL",
+    "ITC",
+    "SBIN",
+    "LT",
+    "KOTAKBANK",
+    "HINDUNILVR",
+    "AXISBANK",
+    "BAJFINANCE",
+    "MARUTI",
+    "WIPRO"
+  ],
+  "calls": [
+    {
+      "symbol": "RELIANCE",
+      "price": 1235.3,
+      "action": "HOLD",
+      "entry": 1235.3,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "BUY",
+      "signal_5m": "HOLD",
+      "confidence": "blocked: 30m BUY needs 5m BUY",
+      "atr_pct": 0.387,
+      "target_pct": 0.356,
+      "target_inr": 4.4,
+      "target_on_10": 44.0
+    },
+    {
+      "symbol": "TCS",
+      "price": 2251.0,
+      "action": "BUY",
+      "entry": 2251.0,
+      "stop": 2242.0,
+      "target": 2260.0,
+      "wait_min": 30,
+      "wait_until": "01:45 IST",
+      "signal_30m": "BUY",
+      "signal_5m": "BUY",
+      "confidence": "BUY confirmed: 30m+5m",
+      "atr_pct": 1.057,
+      "target_pct": 0.4,
+      "target_inr": 9.0,
+      "target_on_10": 90.0
+    },
+    {
+      "symbol": "HDFCBANK",
+      "price": 716.55,
+      "action": "HOLD",
+      "entry": 716.55,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "BUY",
+      "signal_5m": "SELL",
+      "confidence": "blocked: 30m BUY vs 5m SELL",
+      "atr_pct": 0.713,
+      "target_pct": 0.4,
+      "target_inr": 2.87,
+      "target_on_10": 28.7
+    },
+    {
+      "symbol": "INFY",
+      "price": 1077.0,
+      "action": "BUY",
+      "entry": 1077.0,
+      "stop": 1072.69,
+      "target": 1081.31,
+      "wait_min": 30,
+      "wait_until": "01:45 IST",
+      "signal_30m": "BUY",
+      "signal_5m": "BUY",
+      "confidence": "BUY confirmed: 30m+5m",
+      "atr_pct": 0.99,
+      "target_pct": 0.4,
+      "target_inr": 4.31,
+      "target_on_10": 43.1
+    },
+    {
+      "symbol": "ICICIBANK",
+      "price": 1350.4,
+      "action": "HOLD",
+      "entry": 1350.4,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "HOLD",
+      "confidence": "5m not decisive",
+      "atr_pct": 0.416,
+      "target_pct": 0.383,
+      "target_inr": 5.17,
+      "target_on_10": 51.7
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "price": 1830.4,
+      "action": "HOLD",
+      "entry": 1830.4,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "atr_pct": 0.376,
+      "target_pct": 0.346,
+      "target_inr": 6.33,
+      "target_on_10": 63.3
+    },
+    {
+      "symbol": "ITC",
+      "price": 258.0,
+      "action": "HOLD",
+      "entry": 258.0,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "BUY",
+      "confidence": "5m not decisive",
+      "atr_pct": 0.505,
+      "target_pct": 0.4,
+      "target_inr": 1.03,
+      "target_on_10": 10.3
+    },
+    {
+      "symbol": "SBIN",
+      "price": 968.0,
+      "action": "HOLD",
+      "entry": 968.0,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "HOLD",
+      "confidence": "5m not decisive",
+      "atr_pct": 0.383,
+      "target_pct": 0.352,
+      "target_inr": 3.41,
+      "target_on_10": 34.1
+    },
+    {
+      "symbol": "LT",
+      "price": 3850.7,
+      "action": "SELL",
+      "entry": 3850.7,
+      "stop": 3866.1,
+      "target": 3835.3,
+      "wait_min": 30,
+      "wait_until": "01:45 IST",
+      "signal_30m": "SELL",
+      "signal_5m": "SELL",
+      "confidence": "SELL confirmed: 30m+5m (short)",
+      "atr_pct": 0.556,
+      "target_pct": 0.4,
+      "target_inr": 15.4,
+      "target_on_10": 154.0
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "price": 409.8,
+      "action": "HOLD",
+      "entry": 409.8,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "BUY",
+      "confidence": "5m not decisive",
+      "atr_pct": 0.554,
+      "target_pct": 0.4,
+      "target_inr": 1.64,
+      "target_on_10": 16.4
+    },
+    {
+      "symbol": "HINDUNILVR",
+      "price": 1938.1,
+      "action": "BUY",
+      "entry": 1938.1,
+      "stop": 1930.35,
+      "target": 1945.85,
+      "wait_min": 30,
+      "wait_until": "01:45 IST",
+      "signal_30m": "BUY",
+      "signal_5m": "BUY",
+      "confidence": "BUY confirmed: 30m+5m",
+      "atr_pct": 0.598,
+      "target_pct": 0.4,
+      "target_inr": 7.75,
+      "target_on_10": 77.5
+    },
+    {
+      "symbol": "AXISBANK",
+      "price": 1222.9,
+      "action": "HOLD",
+      "entry": 1222.9,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "SELL",
+      "confidence": "5m not decisive",
+      "atr_pct": 0.478,
+      "target_pct": 0.4,
+      "target_inr": 4.89,
+      "target_on_10": 48.9
+    },
+    {
+      "symbol": "BAJFINANCE",
+      "price": 1009.2,
+      "action": "HOLD",
+      "entry": 1009.2,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "BUY",
+      "confidence": "5m not decisive",
+      "atr_pct": 0.494,
+      "target_pct": 0.4,
+      "target_inr": 4.04,
+      "target_on_10": 40.4
+    },
+    {
+      "symbol": "MARUTI",
+      "price": 12231.0,
+      "action": "BUY",
+      "entry": 12231.0,
+      "stop": 12192.26,
+      "target": 12275.55,
+      "wait_min": 30,
+      "wait_until": "01:45 IST",
+      "signal_30m": "BUY",
+      "signal_5m": "BUY",
+      "confidence": "BUY confirmed: 30m+5m",
+      "atr_pct": 0.396,
+      "target_pct": 0.364,
+      "target_inr": 44.55,
+      "target_on_10": 445.5
+    },
+    {
+      "symbol": "WIPRO",
+      "price": 170.0,
+      "action": "BUY",
+      "entry": 170.0,
+      "stop": 169.32,
+      "target": 170.68,
+      "wait_min": 30,
+      "wait_until": "01:45 IST",
+      "signal_30m": "BUY",
+      "signal_5m": "BUY",
+      "confidence": "BUY confirmed: 30m+5m",
+      "atr_pct": 0.685,
+      "target_pct": 0.4,
+      "target_inr": 0.68,
+      "target_on_10": 6.8
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-09-09 11:44 IST",
+      "text": "WRONG/STOP  WIPRO BUY invalidated \u2014 price 167.84 hit stop 171.09"
+    },
+    {
+      "at": "2026-09-09 11:44 IST",
+      "text": "NEW         EXIT ICICIBANK @ 1396.1 | stop - | target -"
+    },
+    {
+      "at": "2026-09-09 11:44 IST",
+      "text": "NEW         SELL ITC @ 261.7 | stop 262.43 | target 260.87"
+    },
+    {
+      "at": "2026-09-09 11:44 IST",
+      "text": "NEW         SELL KOTAKBANK @ 414.65 | stop 415.8 | target 413.33"
+    },
+    {
+      "at": "2026-09-09 11:44 IST",
+      "text": "NEW         SELL HINDUNILVR @ 1954.6 | stop 1959.56 | target 1948.9"
+    },
+    {
+      "at": "2026-09-09 11:44 IST",
+      "text": "NEW         SELL AXISBANK @ 1244.4 | stop 1248.38 | target 1239.83"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "TARGET HIT  HDFCBANK SELL worked \u2014 price 687.1 reached target 692.35"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "FLIP        ICICIBANK EXIT -> HOLD @ 1389.1 (was EXIT entry 1396.1)"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "TARGET HIT  BHARTIARTL SELL worked \u2014 price 1814.7 reached target 1819.61"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "TARGET HIT  ITC SELL worked \u2014 price 260.8 reached target 260.87"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "TARGET HIT  SBIN SELL worked \u2014 price 1000.5 reached target 1001.83"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "FLIP        KOTAKBANK SELL -> HOLD @ 414.0 (was SELL entry 414.65)"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "TARGET HIT  HINDUNILVR SELL worked \u2014 price 1945.0 reached target 1948.9"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "TARGET HIT  AXISBANK SELL worked \u2014 price 1238.5 reached target 1239.83"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "TARGET HIT  BAJFINANCE SELL worked \u2014 price 1039.3 reached target 1045.8"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "FLIP        WIPRO EXIT -> HOLD @ 167.0 (was EXIT entry 167.84)"
+    },
+    {
+      "at": "2026-09-09 17:08 IST",
+      "text": "NEW         BUY RELIANCE @ 1279.0 | stop 1274.17 | target 1284.12"
+    },
+    {
+      "at": "2026-09-10 12:55 IST",
+      "text": "FLIP        RELIANCE BUY -> HOLD @ 1275.3 (was BUY entry 1279.0)"
+    },
+    {
+      "at": "2026-09-10 12:55 IST",
+      "text": "NEW         SELL TCS @ 2194.5 | stop 2202.65 | target 2185.72"
+    },
+    {
+      "at": "2026-09-10 12:55 IST",
+      "text": "NEW         SELL ITC @ 260.8 | stop 261.71 | target 259.76"
+    },
+    {
+      "at": "2026-09-10 12:55 IST",
+      "text": "NEW         SELL KOTAKBANK @ 413.65 | stop 414.73 | target 412.41"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "WRONG/STOP  TCS SELL invalidated \u2014 price 2204.1 hit stop 2202.65"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "TARGET HIT  ITC SELL worked \u2014 price 259.3 reached target 259.76"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "WRONG/STOP  KOTAKBANK SELL invalidated \u2014 price 416.55 hit stop 414.73"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "NEW         BUY RELIANCE @ 1274.0 | stop 1270.43 | target 1278.1"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "NEW         BUY INFY @ 1036.5 | stop 1032.59 | target 1040.65"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "NEW         BUY ICICIBANK @ 1384.5 | stop 1380.73 | target 1388.83"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "NEW         BUY BHARTIARTL @ 1839.0 | stop 1833.35 | target 1845.49"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "NEW         BUY SBIN @ 1009.7 | stop 1006.32 | target 1013.58"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "NEW         BUY LT @ 3955.0 | stop 3941.34 | target 3970.71"
+    },
+    {
+      "at": "2026-09-10 17:48 IST",
+      "text": "NEW         EXIT BAJFINANCE @ 1043.5 | stop - | target -"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "WRONG/STOP  RELIANCE BUY invalidated \u2014 price 1257.4 hit stop 1270.43"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "FLIP        TCS BUY -> SELL @ 2212.0 (was BUY entry 2204.1)"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "FLIP        INFY BUY -> EXIT @ 1040.5 (was BUY entry 1036.5)"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "FLIP        ICICIBANK BUY -> SELL @ 1382.8 (was BUY entry 1384.5)"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "FLIP        BHARTIARTL BUY -> HOLD @ 1841.7 (was BUY entry 1839.0)"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "WRONG/STOP  SBIN BUY invalidated \u2014 price 1001.8 hit stop 1006.32"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "WRONG/STOP  LT BUY invalidated \u2014 price 3918.0 hit stop 3941.34"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "FLIP        KOTAKBANK BUY -> HOLD @ 416.2 (was BUY entry 416.55)"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "FLIP        BAJFINANCE EXIT -> HOLD @ 1029.8 (was EXIT entry 1043.5)"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "NEW         EXIT ITC @ 260.2 | stop - | target -"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "NEW         SELL HINDUNILVR @ 1935.0 | stop 1940.25 | target 1928.96"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "NEW         EXIT AXISBANK @ 1250.8 | stop - | target -"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "NEW         SELL MARUTI @ 12415.0 | stop 12452.03 | target 12372.42"
+    },
+    {
+      "at": "2026-09-11 12:53 IST",
+      "text": "NEW         SELL WIPRO @ 167.27 | stop 167.74 | target 166.73"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        RELIANCE SELL -> BUY @ 1257.5 (was SELL entry 1257.4)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "TARGET HIT  TCS SELL worked \u2014 price 2200.8 reached target 2203.15"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        INFY EXIT -> HOLD @ 1037.7 (was EXIT entry 1040.5)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        ICICIBANK SELL -> HOLD @ 1379.3 (was SELL entry 1382.8)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        ITC EXIT -> HOLD @ 259.85 (was EXIT entry 260.2)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        SBIN EXIT -> HOLD @ 995.7 (was EXIT entry 1001.8)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        LT SELL -> BUY @ 3930.7 (was SELL entry 3918.0)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "TARGET HIT  HINDUNILVR SELL worked \u2014 price 1927.0 reached target 1928.96"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        AXISBANK EXIT -> BUY @ 1246.0 (was EXIT entry 1250.8)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        MARUTI SELL -> HOLD @ 12400.0 (was SELL entry 12415.0)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "FLIP        WIPRO SELL -> HOLD @ 167.4 (was SELL entry 167.27)"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "NEW         BUY HDFCBANK @ 708.25 | stop 705.42 | target 711.08"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "NEW         BUY KOTAKBANK @ 419.0 | stop 417.32 | target 420.68"
+    },
+    {
+      "at": "2026-09-11 17:47 IST",
+      "text": "NEW         BUY BAJFINANCE @ 1034.5 | stop 1030.36 | target 1038.64"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "FLIP        RELIANCE BUY -> SELL @ 1255.8 (was BUY entry 1257.5)"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "TARGET HIT  HDFCBANK BUY worked \u2014 price 720.65 reached target 711.08"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "WRONG/STOP  LT BUY invalidated \u2014 price 3858.5 hit stop 3915.28"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "WRONG/STOP  KOTAKBANK BUY invalidated \u2014 price 412.4 hit stop 417.32"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "WRONG/STOP  AXISBANK BUY invalidated \u2014 price 1233.0 hit stop 1241.02"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "WRONG/STOP  BAJFINANCE BUY invalidated \u2014 price 1015.0 hit stop 1030.36"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "NEW         SELL ICICIBANK @ 1353.2 | stop 1357.67 | target 1348.06"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "NEW         SELL SBIN @ 980.6 | stop 983.43 | target 977.34"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "NEW         BUY HINDUNILVR @ 1955.6 | stop 1947.78 | target 1963.42"
+    },
+    {
+      "at": "2026-09-15 11:50 IST",
+      "text": "NEW         SELL MARUTI @ 12348.0 | stop 12382.97 | target 12307.78"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "TARGET HIT  RELIANCE SELL worked \u2014 price 1235.3 reached target 1251.96"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "FLIP        ICICIBANK SELL -> HOLD @ 1350.4 (was SELL entry 1353.2)"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "TARGET HIT  SBIN SELL worked \u2014 price 968.0 reached target 977.34"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "TARGET HIT  KOTAKBANK SELL worked \u2014 price 409.8 reached target 410.75"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "WRONG/STOP  HINDUNILVR BUY invalidated \u2014 price 1938.1 hit stop 1947.78"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "TARGET HIT  AXISBANK SELL worked \u2014 price 1222.9 reached target 1228.07"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "TARGET HIT  BAJFINANCE SELL worked \u2014 price 1009.2 reached target 1010.94"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "TARGET HIT  MARUTI SELL worked \u2014 price 12231.0 reached target 12307.78"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "NEW         BUY TCS @ 2251.0 | stop 2242.0 | target 2260.0"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "NEW         BUY INFY @ 1077.0 | stop 1072.69 | target 1081.31"
+    },
+    {
+      "at": "2026-09-15 17:27 IST",
+      "text": "NEW         BUY WIPRO @ 170.0 | stop 169.32 | target 170.68"
+    }
+  ],
+  "error": "",
+  "nse_open": false,
+  "minutes_to_close": 0,
+  "next_scan_in": "29m 59s"
+}
