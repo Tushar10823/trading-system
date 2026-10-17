@@ -1,0 +1,936 @@
+{
+  "status": "idle",
+  "scanned_at": "2026-10-17 22:03 IST",
+  "next_scan_at": "2026-10-17T22:33:44.649426+05:30",
+  "interval_min": 30,
+  "watchlist": [
+    "AAPL",
+    "MSTR",
+    "SMCI",
+    "INTC",
+    "CRM",
+    "PLTR",
+    "AVGO",
+    "AMD",
+    "COIN",
+    "TSLA",
+    "NFLX",
+    "AMZN",
+    "GOOGL",
+    "BABA",
+    "META",
+    "NVDA",
+    "MSFT"
+  ],
+  "added": {
+    "AAPL": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 342.9,
+      "stop": 344.27,
+      "target": 341.53,
+      "wait_until": "23:45 IST"
+    },
+    "MSTR": {
+      "reason": "SELL",
+      "at": "2026-10-15 20:04 IST",
+      "entry": 140.34,
+      "stop": 140.9,
+      "target": 139.78,
+      "wait_until": "20:34 IST"
+    },
+    "SMCI": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 31.83,
+      "stop": 31.96,
+      "target": 31.7,
+      "wait_until": "23:45 IST"
+    },
+    "INTC": {
+      "reason": "SELL",
+      "at": "2026-10-16 19:09 IST",
+      "entry": 93.12,
+      "stop": 93.49,
+      "target": 92.75,
+      "wait_until": "19:39 IST"
+    },
+    "CRM": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 240.14,
+      "stop": 241.1,
+      "target": 239.18,
+      "wait_until": "23:46 IST"
+    },
+    "PLTR": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 186.47,
+      "stop": 187.22,
+      "target": 185.72,
+      "wait_until": "23:45 IST"
+    },
+    "AVGO": {
+      "reason": "SELL",
+      "at": "2026-10-16 19:09 IST",
+      "entry": 337.29,
+      "stop": 338.63,
+      "target": 335.94,
+      "wait_until": "19:39 IST"
+    },
+    "AMD": {
+      "reason": "SELL",
+      "at": "2026-10-17 22:03 IST",
+      "entry": 528.77,
+      "stop": 530.89,
+      "target": 526.65,
+      "wait_until": "22:33 IST"
+    },
+    "COIN": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 176.59,
+      "stop": 177.3,
+      "target": 175.88,
+      "wait_until": "23:45 IST"
+    },
+    "TSLA": {
+      "reason": "BUY",
+      "at": "2026-10-16 19:09 IST",
+      "entry": 367.06,
+      "stop": 365.59,
+      "target": 368.52,
+      "wait_until": "19:39 IST"
+    },
+    "NFLX": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 70.57,
+      "stop": 70.85,
+      "target": 70.29,
+      "wait_until": "23:46 IST"
+    },
+    "AMZN": {
+      "reason": "BUY",
+      "at": "2026-10-16 14:08 IST",
+      "entry": 254.76,
+      "stop": 253.74,
+      "target": 255.78,
+      "wait_until": "14:38 IST"
+    },
+    "GOOGL": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 342.45,
+      "stop": 343.78,
+      "target": 341.08,
+      "wait_until": "23:45 IST"
+    },
+    "BABA": {
+      "reason": "BUY",
+      "at": "2026-10-16 19:09 IST",
+      "entry": 111.05,
+      "stop": 110.61,
+      "target": 111.49,
+      "wait_until": "19:39 IST"
+    },
+    "META": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 711.62,
+      "stop": 714.47,
+      "target": 708.78,
+      "wait_until": "23:46 IST"
+    },
+    "NVDA": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 215.94,
+      "stop": 216.8,
+      "target": 215.08,
+      "wait_until": "23:45 IST"
+    },
+    "MSFT": {
+      "reason": "SELL",
+      "at": "2026-10-16 23:16 IST",
+      "entry": 527.9,
+      "stop": 530.01,
+      "target": 525.79,
+      "wait_until": "23:45 IST"
+    }
+  },
+  "calls": [
+    {
+      "symbol": "AAPL",
+      "price": 343.39,
+      "action": "HOLD",
+      "entry": 343.39,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "AVGO",
+      "price": 328.69,
+      "action": "HOLD",
+      "entry": 328.69,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "BUY",
+      "confidence": "5m not decisive",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "NFLX",
+      "price": 70.55,
+      "action": "HOLD",
+      "entry": 70.55,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "AMZN",
+      "price": 250.25,
+      "action": "EXIT",
+      "entry": 250.25,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "HOLD",
+      "confidence": "EXIT longs only: 30m SELL, 5m not confirmed",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "GOOGL",
+      "price": 340.62,
+      "action": "HOLD",
+      "entry": 340.62,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "BABA",
+      "price": 109.1,
+      "action": "HOLD",
+      "entry": 109.1,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "NVDA",
+      "price": 214.12,
+      "action": "HOLD",
+      "entry": 214.12,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "SMCI",
+      "price": 31.63,
+      "action": "HOLD",
+      "entry": 31.63,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "BUY",
+      "confidence": "5m not decisive",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "COIN",
+      "price": 173.18,
+      "action": "HOLD",
+      "entry": 173.18,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "PLTR",
+      "price": 186.03,
+      "action": "HOLD",
+      "entry": 186.03,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "BUY",
+      "confidence": "5m not decisive",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "MSTR",
+      "price": 136.76,
+      "action": "HOLD",
+      "entry": 136.76,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "INTC",
+      "price": 89.77,
+      "action": "HOLD",
+      "entry": 89.77,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "BUY",
+      "confidence": "5m not decisive",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "TSLA",
+      "price": 353.25,
+      "action": "HOLD",
+      "entry": 353.25,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "CRM",
+      "price": 240.77,
+      "action": "HOLD",
+      "entry": 240.77,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "META",
+      "price": 709.42,
+      "action": "HOLD",
+      "entry": 709.42,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "HOLD",
+      "signal_5m": "HOLD",
+      "confidence": "5m not decisive",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "AMD",
+      "price": 528.77,
+      "action": "SELL",
+      "entry": 528.77,
+      "stop": 530.89,
+      "target": 526.65,
+      "wait_min": 30,
+      "wait_until": "22:33 IST",
+      "signal_30m": "SELL",
+      "signal_5m": "SELL",
+      "confidence": "SELL confirmed: 30m+5m (short)",
+      "headline": "",
+      "auto_added": true
+    },
+    {
+      "symbol": "MSFT",
+      "price": 528.99,
+      "action": "HOLD",
+      "entry": 528.99,
+      "stop": "-",
+      "target": "-",
+      "wait_min": 0,
+      "wait_until": "-",
+      "signal_30m": "SELL",
+      "signal_5m": "BUY",
+      "confidence": "blocked: 30m SELL vs 5m BUY",
+      "headline": "",
+      "auto_added": true
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "WRONG/STOP  META BUY invalidated \u2014 price 730.7 hit stop 733.63"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "WRONG/STOP  MSFT BUY invalidated \u2014 price 536.9 hit stop 537.29"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "FLIP        SMCI EXIT -> HOLD @ 33.44 (was EXIT entry 35.22)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "WRONG/STOP  COIN BUY invalidated \u2014 price 180.5 hit stop 183.13"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "TARGET HIT  INTC SELL worked \u2014 price 93.12 reached target 95.38"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "WRONG/STOP  AMD BUY invalidated \u2014 price 542.56 hit stop 559.91"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "TARGET HIT  CRM BUY worked \u2014 price 247.81 reached target 247.68"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "WRONG/STOP  PLTR BUY invalidated \u2014 price 197.3 hit stop 199.69"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "WRONG/STOP  NVDA BUY invalidated \u2014 price 215.86 hit stop 216.46"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "WRONG/STOP  AVGO BUY invalidated \u2014 price 337.29 hit stop 342.91"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "NEW         BUY AAPL @ 342.79 | stop 341.42 | target 344.16"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "NEW         BUY TSLA @ 367.06 | stop 365.59 | target 368.52"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "NEW         SELL NFLX @ 71.39 | stop 71.68 | target 71.11"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 AMZN @ 253.68 P&L $-10.80 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 META @ 730.70 P&L $-58.80 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 MSFT @ 536.90 P&L $-24.60 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 COIN @ 180.50 P&L $-33.70 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 AMD @ 542.56 P&L $-196.00 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 PLTR @ 197.30 P&L $-31.90 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 NVDA @ 215.86 P&L $-14.70 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER STOP long 10 AVGO @ 337.29 P&L $-70.00 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER BUY 10 AAPL @ 342.79 SL 341.42 TP 344.16"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER SELL 10 META @ 730.70 SL 733.62 TP 727.78"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER BUY 10 TSLA @ 367.06 SL 365.59 TP 368.52"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER SELL 10 NFLX @ 71.39 SL 71.68 TP 71.11"
+    },
+    {
+      "at": "2026-10-16 19:09 IST",
+      "text": "PAPER SELL 10 AVGO @ 337.29 SL 338.63 TP 335.94"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "FLIP        AAPL BUY -> SELL @ 342.9 (was BUY entry 342.79)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "WRONG/STOP  BABA BUY invalidated \u2014 price 110.19 hit stop 110.61"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "TARGET HIT  META SELL worked \u2014 price 711.62 reached target 727.78"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "FLIP        AMD EXIT -> SELL @ 536.05 (was EXIT entry 542.56)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "TARGET HIT  INTC SELL worked \u2014 price 91.26 reached target 92.75"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "WRONG/STOP  TSLA BUY invalidated \u2014 price 354.09 hit stop 365.59"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "TARGET HIT  NFLX SELL worked \u2014 price 70.57 reached target 71.11"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "TARGET HIT  AVGO SELL worked \u2014 price 333.1 reached target 335.94"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         EXIT AMZN @ 249.77 | stop - | target -"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         SELL GOOGL @ 342.45 | stop 343.78 | target 341.08"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         SELL NVDA @ 215.94 | stop 216.8 | target 215.08"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         SELL MSFT @ 527.9 | stop 530.01 | target 525.79"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         SELL SMCI @ 31.83 | stop 31.96 | target 31.7"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         EXIT MSTR @ 137.5 | stop - | target -"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         SELL PLTR @ 186.47 | stop 187.22 | target 185.72"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         SELL COIN @ 176.59 | stop 177.3 | target 175.88"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "NEW         SELL CRM @ 240.14 | stop 241.1 | target 239.18"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER STOP long 10 GOOGL @ 342.45 P&L $-68.20 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER STOP long 10 BABA @ 110.19 P&L $-9.50 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER TARGET short 10 META @ 711.62 P&L $190.80 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER STOP long 10 TSLA @ 354.09 P&L $-129.70 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER TARGET short 10 NFLX @ 70.57 P&L $8.20 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER TARGET short 10 AVGO @ 333.10 P&L $41.90 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL long 10 AAPL @ 342.90 P&L $1.10 (10 sh)"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 AAPL @ 342.90 SL 344.27 TP 341.53"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 GOOGL @ 342.45 SL 343.78 TP 341.08"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 NVDA @ 215.94 SL 216.8 TP 215.08"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 MSFT @ 527.90 SL 530.01 TP 525.79"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 SMCI @ 31.83 SL 31.96 TP 31.7"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 PLTR @ 186.47 SL 187.22 TP 185.72"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 AMD @ 536.05 SL 538.19 TP 533.91"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 COIN @ 176.59 SL 177.3 TP 175.88"
+    },
+    {
+      "at": "2026-10-16 23:16 IST",
+      "text": "PAPER SELL 10 CRM @ 240.14 SL 241.1 TP 239.18"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        AAPL SELL -> HOLD @ 343.39 (was SELL entry 342.9)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        AMZN EXIT -> HOLD @ 249.92 (was EXIT entry 249.77)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "TARGET HIT  GOOGL SELL worked \u2014 price 340.62 reached target 341.08"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "TARGET HIT  NVDA SELL worked \u2014 price 214.12 reached target 215.08"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        MSFT SELL -> HOLD @ 528.99 (was SELL entry 527.9)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "TARGET HIT  SMCI SELL worked \u2014 price 31.63 reached target 31.7"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        MSTR EXIT -> HOLD @ 136.76 (was EXIT entry 137.5)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        PLTR SELL -> HOLD @ 186.03 (was SELL entry 186.47)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "TARGET HIT  AMD SELL worked \u2014 price 528.77 reached target 533.91"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "TARGET HIT  COIN SELL worked \u2014 price 173.18 reached target 175.88"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        CRM SELL -> HOLD @ 240.77 (was SELL entry 240.14)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        META SELL -> HOLD @ 709.42 (was SELL entry 711.62)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "FLIP        NFLX SELL -> HOLD @ 70.55 (was SELL entry 70.57)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "NEW         EXIT TSLA @ 354.91 | stop - | target -"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "PAPER TARGET short 10 GOOGL @ 340.62 P&L $18.30 (10 sh)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "PAPER TARGET short 10 NVDA @ 214.12 P&L $18.20 (10 sh)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "PAPER TARGET short 10 SMCI @ 31.63 P&L $2.00 (10 sh)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "PAPER TARGET short 10 AMD @ 528.77 P&L $72.80 (10 sh)"
+    },
+    {
+      "at": "2026-10-17 01:50 IST",
+      "text": "PAPER TARGET short 10 COIN @ 173.18 P&L $34.10 (10 sh)"
+    },
+    {
+      "at": "2026-10-17 04:25 IST",
+      "text": "FLIP        TSLA EXIT -> HOLD @ 353.25 (was EXIT entry 354.91)"
+    },
+    {
+      "at": "2026-10-17 04:25 IST",
+      "text": "NEW         EXIT AMZN @ 250.25 | stop - | target -"
+    }
+  ],
+  "error": "",
+  "market_open": false,
+  "minutes_to_close": 0,
+  "auto_trade": false,
+  "fills": [],
+  "paper_book": true,
+  "paper": {
+    "cash": 115185.3,
+    "open_pnl": -17.7,
+    "realized_pnl": 2211.2,
+    "equity": 115167.6,
+    "total_pnl": 15167.6,
+    "positions": [
+      {
+        "symbol": "AAPL",
+        "side": "short",
+        "qty": 10,
+        "entry": 342.9,
+        "stop": 344.27,
+        "target": 341.53,
+        "last": 343.39,
+        "pnl": -4.9
+      },
+      {
+        "symbol": "MSFT",
+        "side": "short",
+        "qty": 10,
+        "entry": 527.9,
+        "stop": 530.01,
+        "target": 525.79,
+        "last": 528.99,
+        "pnl": -10.9
+      },
+      {
+        "symbol": "PLTR",
+        "side": "short",
+        "qty": 10,
+        "entry": 186.47,
+        "stop": 187.22,
+        "target": 185.72,
+        "last": 186.03,
+        "pnl": 4.4
+      },
+      {
+        "symbol": "CRM",
+        "side": "short",
+        "qty": 10,
+        "entry": 240.14,
+        "stop": 241.1,
+        "target": 239.18,
+        "last": 240.77,
+        "pnl": -6.3
+      }
+    ],
+    "trades": [
+      {
+        "at": "2026-10-17 01:50 IST",
+        "symbol": "COIN",
+        "action": "CLOSE",
+        "qty": 10,
+        "price": 173.18,
+        "pnl": 34.1,
+        "notes": "TARGET short 10 COIN @ 173.18 P&L $34.10 (10 sh)"
+      },
+      {
+        "at": "2026-10-17 01:50 IST",
+        "symbol": "AMD",
+        "action": "CLOSE",
+        "qty": 10,
+        "price": 528.77,
+        "pnl": 72.8,
+        "notes": "TARGET short 10 AMD @ 528.77 P&L $72.80 (10 sh)"
+      },
+      {
+        "at": "2026-10-17 01:50 IST",
+        "symbol": "SMCI",
+        "action": "CLOSE",
+        "qty": 10,
+        "price": 31.63,
+        "pnl": 2.0,
+        "notes": "TARGET short 10 SMCI @ 31.63 P&L $2.00 (10 sh)"
+      },
+      {
+        "at": "2026-10-17 01:50 IST",
+        "symbol": "NVDA",
+        "action": "CLOSE",
+        "qty": 10,
+        "price": 214.12,
+        "pnl": 18.2,
+        "notes": "TARGET short 10 NVDA @ 214.12 P&L $18.20 (10 sh)"
+      },
+      {
+        "at": "2026-10-17 01:50 IST",
+        "symbol": "GOOGL",
+        "action": "CLOSE",
+        "qty": 10,
+        "price": 340.62,
+        "pnl": 18.3,
+        "notes": "TARGET short 10 GOOGL @ 340.62 P&L $18.30 (10 sh)"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "CRM",
+        "action": "SELL",
+        "qty": 10,
+        "price": 240.14,
+        "pnl": 0.0,
+        "notes": "SELL 10 CRM @ 240.14 SL 241.1 TP 239.18"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "COIN",
+        "action": "SELL",
+        "qty": 10,
+        "price": 176.59,
+        "pnl": 0.0,
+        "notes": "SELL 10 COIN @ 176.59 SL 177.3 TP 175.88"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "AMD",
+        "action": "SELL",
+        "qty": 10,
+        "price": 536.05,
+        "pnl": 0.0,
+        "notes": "SELL 10 AMD @ 536.05 SL 538.19 TP 533.91"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "PLTR",
+        "action": "SELL",
+        "qty": 10,
+        "price": 186.47,
+        "pnl": 0.0,
+        "notes": "SELL 10 PLTR @ 186.47 SL 187.22 TP 185.72"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "SMCI",
+        "action": "SELL",
+        "qty": 10,
+        "price": 31.83,
+        "pnl": 0.0,
+        "notes": "SELL 10 SMCI @ 31.83 SL 31.96 TP 31.7"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "MSFT",
+        "action": "SELL",
+        "qty": 10,
+        "price": 527.9,
+        "pnl": 0.0,
+        "notes": "SELL 10 MSFT @ 527.90 SL 530.01 TP 525.79"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "NVDA",
+        "action": "SELL",
+        "qty": 10,
+        "price": 215.94,
+        "pnl": 0.0,
+        "notes": "SELL 10 NVDA @ 215.94 SL 216.8 TP 215.08"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "GOOGL",
+        "action": "SELL",
+        "qty": 10,
+        "price": 342.45,
+        "pnl": 0.0,
+        "notes": "SELL 10 GOOGL @ 342.45 SL 343.78 TP 341.08"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "AAPL",
+        "action": "SELL",
+        "qty": 10,
+        "price": 342.9,
+        "pnl": 0.0,
+        "notes": "SELL 10 AAPL @ 342.90 SL 344.27 TP 341.53"
+      },
+      {
+        "at": "2026-10-16 23:16 IST",
+        "symbol": "AAPL",
+        "action": "CLOSE",
+        "qty": 10,
+        "price": 342.9,
+        "pnl": 1.1,
+        "notes": "SELL long 10 AAPL @ 342.90 P&L $1.10 (10 sh)"
+      }
+    ],
+    "armed": true
+  },
+  "next_scan_in": "29m 59s"
+}
