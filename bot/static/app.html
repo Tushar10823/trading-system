@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading App</title>
+<style>
+  :root {
+    --bg: #0f1115; --bar: #161a21; --ink: #e8eaed; --muted: #9aa0a6; --line: #262b33;
+    --accent: #3ddc97; --tab: #1e232b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .app { display: flex; flex-direction: column; height: 100%; }
+  header { display: flex; align-items: center; gap: 16px; padding: 8px 16px; background: var(--bar);
+    border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .brand { font-weight: 700; white-space: nowrap; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  nav button { border: 1px solid var(--line); background: var(--tab); color: var(--ink); border-radius: 999px;
+    padding: 7px 16px; font: inherit; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  nav button.active { background: var(--accent); color: #08130e; border-color: var(--accent); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.open { background: #3ddc97; box-shadow: 0 0 0 3px rgba(61,220,151,.25); }
+  nav button.active .dot { background: #08130e; box-shadow: none; }
+  .note { margin-left: auto; color: var(--muted); font-size: 13px; }
+  main { flex: 1; position: relative; }
+  iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: none; background: var(--bg); }
+  iframe.active { display: block; }
+  @media (max-width: 640px) {
+    header { padding: 8px 12px; gap: 8px; }
+    nav button { padding: 6px 12px; font-size: 14px; }
+    .note { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">Trading App</div>
+    <nav id="tabs"></nav>
+    <div class="note">Paper trading only · not financial advice</div>
+  </header>
+  <main id="frames"></main>
+</div>
+<script>
+  const PAGES = [
+    { id: "us", label: "US board", src: "/us/", state: "/us/api/state" },
+    { id: "in", label: "India board", src: "/in/", state: "/in/api/state" },
+    { id: "tools", label: "Trader tools", src: "/tools/" },
+  ];
+  let shown = [], loaded = {};
+
+  function pick(id) {
+    if (!shown.some(p => p.id === id)) id = shown[0].id;
+    for (const p of shown) {
+      document.getElementById("tab-" + p.id).classList.toggle("active", p.id === id);
+      const f = document.getElementById("frame-" + p.id);
+      if (p.id === id && !loaded[id]) { f.src = p.src; loaded[id] = true; }
+      f.classList.toggle("active", p.id === id);
+    }
+    history.replaceState(null, "", "#" + id);
+  }
+
+  async function marketDots() {
+    for (const p of shown.filter(p => p.state)) {
+      try {
+        const s = await fetch(p.state, { cache: "no-store" }).then(r => r.json());
+        document.getElementById("dot-" + p.id).classList.toggle("open", !!s.market_open);
+        document.getElementById("dot-" + p.id).title = s.market_open ? "Market open" : "Market closed";
+      } catch (e) {}
+    }
+  }
+
+  (async () => {
+    let on = { us: true, in: true, tools: true };
+    try { on = await fetch("/api/apps").then(r => r.json()); } catch (e) {}
+    shown = PAGES.filter(p => on[p.id]);
+    document.getElementById("tabs").innerHTML = shown.map(p =>
+      `<button id="tab-${p.id}" onclick="pick('${p.id}')">${p.state ? `<span class="dot" id="dot-${p.id}"></span>` : ""}${p.label}</button>`).join("");
+    document.getElementById("frames").innerHTML = shown.map(p =>
+      `<iframe id="frame-${p.id}" title="${p.label}"></iframe>`).join("");
+    pick(location.hash.slice(1) || "us");
+    addEventListener("hashchange", () => pick(location.hash.slice(1)));
+    marketDots();
+    setInterval(marketDots, 60000);
+  })();
+</script>
+</body>
+</html>

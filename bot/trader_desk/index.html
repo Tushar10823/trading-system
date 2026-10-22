@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trader Desk</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1c1c1a; --muted: #6b6a63; --line: #e3e1d9;
+  --accent: #1f6f5c; --accent-ink: #ffffff; --accent-soft: #e3f0ec;
+  --warn: #9a5b00; --warn-soft: #fbf0dc; --bad: #a23b2c; --bad-soft: #f8e5e1;
+  --code-bg: #f1efe8; --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141513; --panel: #1c1d1b; --ink: #ecebe6; --muted: #9b9a92; --line: #2e2f2c;
+    --accent: #5fbfa3; --accent-ink: #0d1c17; --accent-soft: #1f322c;
+    --warn: #e0a54b; --warn-soft: #33281a; --bad: #e5826f; --bad-soft: #3a221d;
+    --code-bg: #121311; --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+nav { border-right: 1px solid var(--line); padding: 20px 14px; position: sticky; top: 0; height: 100vh; overflow: auto; }
+.brand { font-weight: 700; font-size: 17px; padding: 0 10px 4px; }
+.brand small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+.group { margin-top: 18px; }
+.group h4 { margin: 0 10px 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.nav-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left;
+  border: 0; background: none; padding: 7px 10px; border-radius: 8px; cursor: pointer; }
+.nav-btn:hover { background: var(--code-bg); }
+.nav-btn.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-btn .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }
+main { padding: 28px 36px 60px; max-width: 1100px; width: 100%; min-width: 0; }
+.grid2 > *, .files > * { min-width: 0; }
+.card { overflow-x: auto; }
+.notice { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; margin-bottom: 22px; }
+h1 { font-size: 24px; margin: 0 0 2px; }
+.sub { color: var(--muted); margin: 0 0 20px; overflow-wrap: anywhere; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
+.card h3 { margin: 0 0 12px; font-size: 15px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.tab { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 5px 13px; cursor: pointer; font-size: 14px; }
+.tab.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 18px; }
+.field label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+.field input[type=text], .field input[type=number], .field select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.field input:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.check { display: flex; gap: 8px; align-items: center; padding-top: 20px; font-size: 14px; cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.choice { display: flex; gap: 6px; }
+.choice select { flex: 1.4; } .choice input { flex: 1; }
+.row { display: flex; gap: 10px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+.btn { border: 0; border-radius: 8px; padding: 9px 18px; background: var(--accent); color: var(--accent-ink); font-weight: 600; cursor: pointer; }
+.btn:disabled { opacity: .55; cursor: wait; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
+.hint { color: var(--muted); font-size: 13px; }
+.writes { font-size: 12.5px; color: var(--muted); }
+.out-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 8px; flex-wrap: wrap; }
+.cmd { font: 12.5px ui-monospace, Consolas, monospace; color: var(--muted); word-break: break-all; }
+.badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.badge.ok { background: var(--accent-soft); color: var(--accent); }
+.badge.err { background: var(--bad-soft); color: var(--bad); }
+pre { margin: 0; background: var(--code-bg); border-radius: 8px; padding: 14px; overflow: auto; max-height: 70vh;
+  font: 12.8px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace; white-space: pre; }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.flow { display: grid; gap: 10px; }
+.flow-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.flow-row .lbl { width: 130px; color: var(--muted); font-size: 13px; }
+.chip { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 13.5px; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.arrow { color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.files { display: grid; grid-template-columns: 260px 1fr; gap: 18px; }
+.file-btn { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; font: 13px ui-monospace, Consolas, monospace; }
+.file-btn:hover, .file-btn.active { background: var(--accent-soft); color: var(--accent); }
+.empty { color: var(--muted); font-size: 14px; }
+.menu-btn { display: none; }
+@media (max-width: 820px) {
+  .app { grid-template-columns: 1fr; }
+  nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); display: none; }
+  nav.open { display: block; }
+  .menu-btn { display: inline-block; margin-bottom: 12px; }
+  main { padding: 18px 16px 48px; }
+  .grid2, .files { grid-template-columns: 1fr; }
+  .flow-row .lbl { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav id="nav"></nav>
+  <main>
+    <button class="btn ghost menu-btn" onclick="document.getElementById('nav').classList.toggle('open')">Menu</button>
+    <div class="notice">Runs the Trader tools on this computer. It never places an order: you place trades yourself in your broker. Not financial advice.</div>
+    <div id="view"></div>
+  </main>
+</div>
+<script>
+const GROUPS = [
+  ["Copy an investor", ["copycat", "budget", "risk", "broker"]],
+  ["Watch", ["news", "pelosi", "alerts"]],
+  ["Pick your own", ["analyst", "screener"]],
+  ["Maintain", ["rebalance", "tax"]],
+];
+const FLOWS = [
+  ["Copy an investor", ["copycat", "budget", "risk", "broker"]],
+  ["Pick your own", ["analyst", "screener", "budget", "risk", "broker"]],
+  ["Watch", ["news", "pelosi", "alerts"]],
+  ["Maintain", ["rebalance", "tax", "risk", "broker"]],
+];
+let TOOLS = {}, META = {}, page = "home", actionFor = {}, values = {}, outputs = {}, running = {};
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => "$" + Number(n).toLocaleString(undefined, {maximumFractionDigits: 2});
+
+async function api(path, body) {
+  const opt = body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)};
+  const r = await fetch(path, opt);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+function go(p) {
+  page = p;
+  try { localStorage.setItem("trader-page", p); } catch (e) {}
+  $("#nav").classList.remove("open");
+  render();
+}
+
+function renderNav() {
+  const item = (id, label, dot) =>
+    `<button class="nav-btn ${page === id ? "active" : ""}" onclick="go('${id}')"><span>${esc(label)}</span>${dot ? '<span class="dot" title="Not installed"></span>' : ""}</button>`;
+  let h = `<div class="brand">Trader Desk<small>11 tools, your data stays here</small></div>`;
+  h += `<div class="group">${item("home", "Overview")}${item("settings", "Settings")}${item("files", "Files")}</div>`;
+  for (const [g, ids] of GROUPS) {
+    h += `<div class="group"><h4>${esc(g)}</h4>${ids.map(id => item(id, TOOLS[id].name, !META.installed[id])).join("")}</div>`;
+  }
+  $("#nav").innerHTML = h;
+}
+
+function render() {
+  renderNav();
+  if (page === "home") return renderHome();
+  if (page === "settings") return renderSettings();
+  if (page === "files") return renderFiles();
+  renderTool(TOOLS[page]);
+}
+
+/* ---------- tools ---------- */
+function defaults(action) {
+  const v = {};
+  for (const f of action.fields) {
+    if (f.type === "check") v[f.name] = !!f.default;
+    else if (f.type === "choice") v[f.name] = {flag: f.options[0][0], value: ""};
+    else v[f.name] = f.default ?? "";
+  }
+  return v;
+}
+function key(t, a) { return t + "/" + a; }
+
+function fieldHtml(f, v) {
+  const id = "f_" + f.name;
+  const req = f.required ? " *" : "";
+  if (f.type === "check")
+    return `<label class="check"><input type="checkbox" id="${id}" ${v ? "checked" : ""} onchange="setVal('${f.name}', this.checked)">${esc(f.label)}</label>`;
+  if (f.type === "select")
+    return `<div class="field"><label for="${id}">${esc(f.label)}</label><select id="${id}" onchange="setVal('${f.name}', this.value)">${
+      f.options.map(o => `<option ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></div>`;
+  if (f.type === "choice") {
+    const novalue = (f.novalue || []).includes(v.flag);
+    return `<div class="field"><label>${esc(f.label)}${req}</label><div class="choice">
+      <select onchange="setChoice('${f.name}', 'flag', this.value)">${f.options.map(([fl, lb]) => `<option value="${esc(fl)}" ${fl === v.flag ? "selected" : ""}>${esc(lb)}</option>`).join("")}</select>
+      <input type="number" step="any" value="${esc(v.value)}" ${novalue ? "disabled" : ""} oninput="setChoice('${f.name}', 'value', this.value)"></div></div>`;
+  }
+  const type = f.type === "number" ? "number" : "text";
+  return `<div class="field"><label for="${id}">${esc(f.label)}${req}</label><input id="${id}" type="${type}" ${type === "number" ? 'step="any" min="0"' : ""}
+    value="${esc(v)}" placeholder="${esc(f.placeholder || "")}" oninput="setVal('${f.name}', this.value)" onkeydown="if(event.key==='Enter')runTool()"></div>`;
+}
+
+function renderTool(t) {
+  const aid = actionFor[t.id] || t.actions[0].id;
+  actionFor[t.id] = aid;
+  const a = t.actions.find(x => x.id === aid);
+  const k = key(t.id, aid);
+  if (!values[k]) values[k] = defaults(a);
+  const out = outputs[k];
+  let h = `<h1>${esc(t.name)}</h1><p class="sub">${esc(t.job)}</p>`;
+  if (!META.installed[t.id]) h += `<div class="notice">Not found in ${esc(META.skills)}. Install the skills there, or start the server with --skills.</div>`;
+  h += `<div class="card">`;
+  if (t.actions.length > 1)
+    h += `<div class="tabs">${t.actions.map(x => `<button class="tab ${x.id === aid ? "active" : ""}" onclick="pickAction('${x.id}')">${esc(x.label)}</button>`).join("")}</div>`;
+  h += a.fields.length ? `<div class="form">${a.fields.map(f => fieldHtml(f, values[k][f.name])).join("")}</div>` : `<p class="hint">No options. Just run it.</p>`;
+  h += `<div class="row"><button class="btn" id="runbtn" onclick="runTool()" ${running[k] ? "disabled" : ""}>${running[k] ? "Running…" : "Run " + esc(a.label.toLowerCase())}</button>`;
+  if (running[k]) h += `<span class="spinner"></span>`;
+  if (a.writes) h += `<span class="writes">Writes ${esc(a.writes)}</span>`;
+  if (t.sec) h += `<span class="writes">Uses SEC data: needs your name and email in Settings</span>`;
+  h += `</div></div>`;
+  if (out) {
+    h += `<div class="card"><div class="out-head"><span class="cmd">${esc(out.cmd || "")}</span>
+      <span class="badge ${out.ok ? "ok" : "err"}">${out.ok ? "Done" : "Error" + (out.code > 0 ? " (exit " + out.code + ")" : "")}</span></div>
+      <pre>${esc(out.output)}</pre></div>`;
+  }
+  $("#view").innerHTML = h;
+}
+
+function pickAction(id) { actionFor[page] = id; render(); }
+function setVal(name, v) { values[key(page, actionFor[page])][name] = v; }
+function setChoice(name, part, v) {
+  const k = key(page, actionFor[page]);
+  values[k][name][part] = v;
+  if (part === "flag") render();
+}
+
+async function runTool() {
+  const t = TOOLS[page], aid = actionFor[page], k = key(t.id, aid);
+  if (running[k]) return;
+  running[k] = true; render();
+  try {
+    outputs[k] = await api("/api/run", {tool: t.id, action: aid, values: values[k]});
+  } catch (e) {
+    outputs[k] = {ok: false, code: -1, cmd: "", output: e.message};
+  }
+  running[k] = false;
+  if (page === t.id) render();
+}
+
+/* ---------- overview ---------- */
+async function readJson(path) {
+  try { return JSON.parse((await api("/api/file?path=" + encodeURIComponent(path))).text); } catch (e) { return null; }
+}
+
+async function renderHome() {
+  let h = `<h1>Overview</h1><p class="sub">Each tool reads what the one before it wrote in your trader/ folder.</p>`;
+  h += `<div class="card"><h3>Workflows</h3><div class="flow">${FLOWS.map(([lbl, ids]) =>
+    `<div class="flow-row"><span class="lbl">${esc(lbl)}</span>${ids.map(id => `<button class="chip" onclick="go('${id}')">${esc(TOOLS[id].name)}</button>`).join('<span class="arrow">→</span>')}</div>`).join("")}</div></div>`;
+  h += `<div class="grid2"><div class="card" id="h-targets"><h3>Targets</h3><p class="empty">Loading…</p></div>
+        <div class="card" id="h-orders"><h3>Proposed orders</h3><p class="empty">Loading…</p></div></div>
+        <div class="card" id="h-clock"><h3>Market</h3><p class="empty">Loading…</p></div>`;
+  $("#view").innerHTML = h;
+
+  const [cfg, targets, orders, risk] = await Promise.all([
+    api("/api/config").catch(() => ({})), readJson("trader/targets.json"), readJson("trader/orders.json"), readJson("trader/state/risk.json")]);
+  if (page !== "home") return;
+
+  const tg = $("#h-targets");
+  const tl = targets && (targets.targets || targets.weights || targets.positions);
+  if (Array.isArray(tl) && tl.length) {
+    tg.innerHTML = `<h3>Targets</h3><p class="hint">${esc(targets.source || targets.filer || "")}</p><table><tr><th>Ticker</th><th>Name</th><th class="num">Weight</th></tr>${
+      tl.map(x => `<tr><td>${esc(x.symbol || x.ticker)}</td><td>${esc(x.name || "")}</td><td class="num">${esc(Number(x.weight ?? x.pct ?? 0).toFixed(2))}%</td></tr>`).join("")}</table>`;
+  } else tg.innerHTML = `<h3>Targets</h3><p class="empty">None yet. Run <a href="#" onclick="go('copycat');return false">Copycat → Copy to targets</a>.</p>`;
+
+  const og = $("#h-orders");
+  const ol = orders && orders.orders;
+  if (Array.isArray(ol) && ol.length) {
+    const total = ol.reduce((s, o) => s + Number(o.notional || 0), 0);
+    og.innerHTML = `<h3>Proposed orders</h3><p class="hint">${esc(orders.status || "")}${orders.paper ? " · paper" : ""} · budget ${money(cfg.budget || 0)}</p><table><tr><th>Side</th><th>Ticker</th><th class="num">Amount</th></tr>${
+      ol.map(o => `<tr><td>${esc(o.side)}</td><td>${esc(o.symbol)}</td><td class="num">${o.notional ? money(o.notional) : esc(o.qty + " sh")}</td></tr>`).join("")}
+      <tr><td></td><td><b>Total</b></td><td class="num"><b>${money(total)}</b></td></tr></table>
+      <div class="row"><button class="btn ghost" onclick="go('risk')">Check with Risk</button></div>`;
+  } else og.innerHTML = `<h3>Proposed orders</h3><p class="empty">None yet. Run <a href="#" onclick="go('budget');return false">Budget</a>.</p>`;
+
+  try {
+    const r = await api("/api/run", {tool: "alerts", action: "clock", values: {}});
+    if (page === "home") $("#h-clock").innerHTML = `<h3>Market</h3><pre>${esc(r.output)}</pre>`;
+  } catch (e) { if (page === "home") $("#h-clock").innerHTML = `<h3>Market</h3><p class="empty">${esc(e.message)}</p>`; }
+}
+
+/* ---------- settings ---------- */
+const SETTINGS = [
+  ["sec_user_agent", "SEC identity (Name email@example.com)", "text"],
+  ["budget", "Budget $", "number"], ["cash_buffer_pct", "Cash buffer %", "number"],
+  ["max_position_pct", "Max per stock %", "number"], ["max_order_usd", "Max single order $", "number"],
+  ["min_order_usd", "Min order $", "number"], ["max_orders_per_day", "Max orders per day", "number"],
+  ["blocked", "Blocked tickers", "text"], ["broker", "Broker", "select", ["alpaca", "ibkr"]],
+  ["fractional", "Allow fractional shares", "check"],
+];
+async function renderSettings() {
+  $("#view").innerHTML = `<h1>Settings</h1><p class="sub">Saved to trader/config.json. Budget, Risk and the SEC tools read these.</p><div class="card"><p class="empty">Loading…</p></div>`;
+  const cfg = await api("/api/config");
+  if (page !== "settings") return;
+  let h = `<h1>Settings</h1><p class="sub">Saved to ${esc(META.data)}/trader/config.json. Budget, Risk and the SEC tools read these.</p><div class="card"><div class="form">`;
+  for (const [k, label, type, opts] of SETTINGS) {
+    let v = cfg[k]; if (Array.isArray(v)) v = v.join(" ");
+    if (type === "check") h += `<label class="check"><input type="checkbox" data-k="${k}" ${v ? "checked" : ""}>${esc(label)}</label>`;
+    else if (type === "select") h += `<div class="field"><label>${esc(label)}</label><select data-k="${k}">${opts.map(o => `<option ${o === v ? "selected" : ""}>${o}</option>`).join("")}</select></div>`;
+    else h += `<div class="field"><label>${esc(label)}</label><input type="${type}" step="any" min="0" data-k="${k}" value="${esc(v ?? "")}"></div>`;
+  }
+  h += `</div><div class="row"><button class="btn" onclick="saveSettings()">Save</button><span class="hint" id="saved"></span></div>
+    <p class="hint" style="margin-top:14px">Paper trading stays on, and options, margin and short selling stay off. Change those by editing the file yourself.</p></div>`;
+  $("#view").innerHTML = h;
+}
+async function saveSettings() {
+  const body = {};
+  document.querySelectorAll("[data-k]").forEach(el => body[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value);
+  try { await api("/api/config", body); $("#saved").textContent = "Saved."; }
+  catch (e) { $("#saved").textContent = "Not saved: " + e.message; }
+}
+
+/* ---------- files ---------- */
+async function renderFiles(sel) {
+  const {files} = await api("/api/files");
+  if (page !== "files") return;
+  let h = `<h1>Files</h1><p class="sub">Everything the tools have written in ${esc(META.data)}/trader.</p><div class="files"><div class="card">`;
+  h += files.length ? files.map(f => `<button class="file-btn ${f.path === sel ? "active" : ""}" onclick="renderFiles('${esc(f.path)}')">${esc(f.path.replace(/^trader\//, ""))}</button>`).join("")
+                    : `<p class="empty">No files yet.</p>`;
+  h += `</div><div class="card"><pre id="file-body">${sel ? "Loading…" : "Pick a file."}</pre></div></div>`;
+  $("#view").innerHTML = h;
+  if (sel) {
+    try {
+      let {text} = await api("/api/file?path=" + encodeURIComponent(sel));
+      try { text = JSON.stringify(JSON.parse(text), null, 2); } catch (e) {}
+      $("#file-body").textContent = text;
+    } catch (e) { $("#file-body").textContent = e.message; }
+  }
+}
+
+/* ---------- start ---------- */
+(async () => {
+  META = await api("/api/tools");
+  for (const t of META.tools) TOOLS[t.id] = t;
+  try { const p = localStorage.getItem("trader-page"); if (p && (TOOLS[p] || ["home", "settings", "files"].includes(p))) page = p; } catch (e) {}
+  render();
+})();
+</script>
+</body>
+</html>
