@@ -39,14 +39,18 @@ from signal_engine import combine_labels
 INTRADAY_BUY_THRESHOLD = 1.0
 INTRADAY_SELL_THRESHOLD = -1.0
 
-# Paper fills 17 Aug IST: AAPL +$0.40/sh (~0.13%), AVGO +$1.00/sh (~0.25%).
-# Aim first target near that, still scaled by 30m ATR (AVGO keeps a bigger $ target).
+# Paper fills 17 Aug IST: AAPL +$0.40/sh (+$4 on 10) closed before TP; AVGO +$1.00/sh (+$10) hit TP.
+# AVGO stays ATR-scaled; quiet mega-caps get a per-symbol target cap (see SYMBOL_MAX_TARGET_PCT).
 STOP_ATR_MULT = 0.80
 TARGET_ATR_MULT = 0.70
 MIN_STOP_PCT = 0.0012   # 0.12%
 MAX_STOP_PCT = 0.0040   # 0.40%
-MIN_TARGET_PCT = 0.0013 # 0.13%  (AAPL realized)
+MIN_TARGET_PCT = 0.0013 # 0.13%  (floor for low-vol names)
 MAX_TARGET_PCT = 0.0040 # 0.40%  (cap so we do not stretch back to 0.7%)
+# Per-symbol target ceiling after ATR math (AVGO and others unchanged when absent).
+SYMBOL_MAX_TARGET_PCT: dict[str, float] = {
+    "AAPL": 0.0017,  # ~$0.40/sh at $230 — matches realized AAPL short move
+}
 # Fallback if ATR cannot be computed
 STOP_LOSS_PCT = 0.0025
 TAKE_PROFIT_PCT = 0.0035
@@ -143,7 +147,7 @@ def clip_pct(value: float, lo: float, hi: float) -> float:
     return min(max(value, lo), hi)
 
 
-def sl_tp_pct(price: float, atr: float) -> tuple[float, float]:
+def sl_tp_pct(price: float, atr: float, symbol: str = "") -> tuple[float, float]:
     """Stop/target as fractions of price, scaled to 30m movement."""
     if price <= 0 or atr <= 0:
         return STOP_LOSS_PCT, TAKE_PROFIT_PCT
@@ -151,6 +155,9 @@ def sl_tp_pct(price: float, atr: float) -> tuple[float, float]:
     target_pct = clip_pct(TARGET_ATR_MULT * atr / price, MIN_TARGET_PCT, MAX_TARGET_PCT)
     if target_pct < stop_pct * 1.1:
         target_pct = clip_pct(stop_pct * 1.15, MIN_TARGET_PCT, MAX_TARGET_PCT)
+    cap = SYMBOL_MAX_TARGET_PCT.get(symbol.upper())
+    if cap is not None:
+        target_pct = min(target_pct, cap)
     return stop_pct, target_pct
 
 
@@ -184,7 +191,7 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
     confirm = score_frame(df5)
     action, note = decide_call(primary, confirm)
     atr = atr_value(df30)
-    stop_pct, target_pct = sl_tp_pct(price, atr)
+    stop_pct, target_pct = sl_tp_pct(price, atr, symbol)
     plan = trade_plan(action, price, stop_pct, target_pct)
 
     mtc = minutes_to_close()
