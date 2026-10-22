@@ -16,6 +16,7 @@ from zoneinfo import ZoneInfo
 from india_kpi import KILL_SWITCH_DD, evaluate_paper
 from india_intraday_calls import SMALL_SET
 from india_market_data import is_nse_market_hours
+from india_risk import check_entry
 
 OUTPUT = Path(__file__).resolve().parent / "output"
 BOOK_FILE = OUTPUT / "india_paper.json"
@@ -231,6 +232,9 @@ def _open(
 ) -> str:
     if book.get("paused"):
         return f"skip {symbol}: kill switch paused new entries"
+    blocked = check_entry(book, symbol, side, price, qty, stop, target, _cost_rate(book))
+    if blocked:
+        return f"skip {symbol}: india-risk BLOCK " + "; ".join(blocked)
     max_pos = int(book.get("max_positions") or MAX_POSITIONS)
     if len(book["positions"]) >= max_pos:
         return f"skip {symbol}: max {max_pos} concurrent positions"
