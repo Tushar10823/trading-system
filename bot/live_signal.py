@@ -13,6 +13,12 @@ Scheduled every 15 minutes (log only):
 Paper trading (OPT-IN):
   python live_signal.py --symbol AAPL --once --auto-trade
 
+Watch the tickers trader-copycat picked (trader/targets.json):
+  python live_signal.py --from-targets --once
+
+Every --auto-trade order is sized to and checked by trader-risk first
+(trader/config.json); a BLOCK means no order. See trader_bridge.py.
+
 Always prints PAPER vs LIVE account mode on every run.
 """
 
@@ -31,6 +37,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.trading.requests import MarketOrderRequest
 
+import trader_bridge
 from market_data import fetch_daily_bars, load_keys
 from signal_engine import format_signal_report, generate_signal
 
@@ -157,15 +164,18 @@ def execute_auto_trade(
             }
         account = client.get_account()
         budget = float(account.buying_power) * BUY_POWER_FRACTION
-        shares = int(budget // close)
+        shares = trader_bridge.size_buy(client, symbol, close, budget)
         if shares < 1:
             return {
                 "order_id": "",
                 "order_status": "skipped",
-                "notes": "insufficient buying power for 1 share",
+                "notes": "no room for 1 share inside trader-risk limits",
                 "side": "",
                 "qty": 0,
             }
+        passed, reasons = trader_bridge.check_order(client, symbol, "buy", shares, close)
+        if not passed:
+            return trader_bridge.blocked_result(symbol, "buy", shares, reasons)
         order = client.submit_order(
             MarketOrderRequest(
                 symbol=symbol,
@@ -174,10 +184,11 @@ def execute_auto_trade(
                 time_in_force=TimeInForce.DAY,
             )
         )
+        trader_bridge.record_placed(symbol, "buy", shares, str(order.id))
         return {
             "order_id": str(order.id),
             "order_status": str(order.status),
-            "notes": f"bought {shares} shares @ ~{close:.2f}",
+            "notes": f"bought {shares} shares @ ~{close:.2f} (trader-risk PASS)",
             "side": "BUY",
             "qty": shares,
         }
@@ -192,6 +203,9 @@ def execute_auto_trade(
                 "qty": 0,
             }
         shares = int(qty_held)
+        passed, reasons = trader_bridge.check_order(client, symbol, "sell", shares, close)
+        if not passed:
+            return trader_bridge.blocked_result(symbol, "sell", shares, reasons)
         order = client.submit_order(
             MarketOrderRequest(
                 symbol=symbol,
@@ -200,10 +214,11 @@ def execute_auto_trade(
                 time_in_force=TimeInForce.DAY,
             )
         )
+        trader_bridge.record_placed(symbol, "sell", shares, str(order.id))
         return {
             "order_id": str(order.id),
             "order_status": str(order.status),
-            "notes": f"sold {shares} shares @ ~{close:.2f}",
+            "notes": f"sold {shares} shares @ ~{close:.2f} (trader-risk PASS)",
             "side": "SELL",
             "qty": shares,
         }
@@ -304,6 +319,11 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Live paper signal loop (localhost)")
     p.add_argument("--symbol", default="AAPL", help="Ticker to watch (default AAPL)")
     p.add_argument(
+        "--from-targets",
+        action="store_true",
+        help="Watch every ticker in trader/targets.json (from trader-copycat) instead of --symbol",
+    )
+    p.add_argument(
         "--interval",
         type=int,
         default=15,
@@ -324,23 +344,33 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    symbol = args.symbol.upper()
+    if args.from_targets:
+        symbols = trader_bridge.load_target_symbols()
+        print(f"Targets from {trader_bridge.TARGETS_FILE}: {', '.join(symbols)}")
+    else:
+        symbols = [args.symbol.upper()]
 
     print("Phase 5 - Live paper signal bot (localhost)")
     print("Default is LOG ONLY. Orders require --auto-trade.")
+    if args.auto_trade:
+        print(f"Every order is checked by trader-risk against {trader_bridge.CONFIG_FILE}")
     print()
 
+    def run_all() -> None:
+        for symbol in symbols:
+            try:
+                run_once(symbol, auto_trade=args.auto_trade)
+            except Exception as exc:  # noqa: BLE001
+                print(f"ERROR on {symbol}: {exc}")
+
     if args.once:
-        run_once(symbol, auto_trade=args.auto_trade)
+        run_all()
         print("Phase 5 single run complete.")
         return
 
-    print(f"Looping every {args.interval} minute(s) on {symbol}. Ctrl+C to stop.")
+    print(f"Looping every {args.interval} minute(s) on {', '.join(symbols)}. Ctrl+C to stop.")
     while True:
-        try:
-            run_once(symbol, auto_trade=args.auto_trade)
-        except Exception as exc:  # noqa: BLE001
-            print(f"ERROR during cycle: {exc}")
+        run_all()
         print(f"Sleeping {args.interval} minute(s)...")
         time.sleep(max(args.interval, 1) * 60)
 
