@@ -24,6 +24,7 @@ from alpaca.trading.requests import (
     TakeProfitRequest,
 )
 
+import trader_bridge
 from market_data import load_keys
 
 OUTPUT = Path(__file__).resolve().parent / "output"
@@ -98,13 +99,43 @@ def _bracket(side: OrderSide, qty: int, stop: Any, target: Any) -> dict[str, Any
     }
 
 
+def _call_price(call: dict[str, Any]) -> float:
+    for key in ("price", "entry"):
+        try:
+            return float(call.get(key))
+        except (TypeError, ValueError):
+            continue
+    return 0.0
+
+
+def _risk_gate(
+    client: TradingClient, symbol: str, side: str, qty: int, price: float
+) -> tuple[int, str]:
+    """Shrink the entry to trader-risk limits and check it. Returns (shares, "") or (0, why)."""
+    if price <= 0:
+        return 0, f"trader-risk BLOCK {side} {symbol}: no price on the call"
+    shares = min(qty, trader_bridge.size_buy(client, symbol, price, qty * price))
+    if shares < 1:
+        return 0, f"trader-risk BLOCK {side} {symbol}: no room for 1 share inside your limits"
+    # The bracket legs only cap the loss; trader-risk checks the market entry itself.
+    passed, reasons = trader_bridge.check_order(client, symbol, side, shares, price)
+    if not passed:
+        return 0, f"trader-risk BLOCK {side} {shares} {symbol}: " + "; ".join(reasons)
+    return shares, ""
+
+
 def execute_call(client: TradingClient, call: dict[str, Any], qty: int) -> dict[str, Any]:
-    """Place one paper order for a BUY / SELL / EXIT call. Idempotent vs current position."""
+    """Place one paper order for a BUY / SELL / EXIT call. Idempotent vs current position.
+
+    BUY and SELL entries go through trader-risk first (trader_bridge.py). Closing a
+    position (EXIT, or the flatten before a flip) is not gated: it only lowers risk.
+    """
     symbol = str(call.get("symbol", "")).upper()
     action = str(call.get("action", "")).upper()
     stop = call.get("stop")
     target = call.get("target")
     held = _qty(symbol, client)
+    price = _call_price(call)
 
     if action == "HOLD":
         return {"symbol": symbol, "ok": True, "notes": "HOLD — no order"}
@@ -118,6 +149,9 @@ def execute_call(client: TradingClient, call: dict[str, Any], qty: int) -> dict[
             return {"symbol": symbol, "ok": True, "notes": f"already long {held} — skip"}
         if held < 0:
             _flatten(client, symbol)
+        qty, why = _risk_gate(client, symbol, "buy", qty, price)
+        if not qty:
+            return {"symbol": symbol, "ok": True, "action": "BLOCKED", "notes": why}
         extra = _bracket(OrderSide.BUY, qty, stop, target)
         order = client.submit_order(
             MarketOrderRequest(
@@ -128,6 +162,7 @@ def execute_call(client: TradingClient, call: dict[str, Any], qty: int) -> dict[
                 **extra,
             )
         )
+        trader_bridge.record_placed(symbol, "buy", qty, str(order.id))
         return {
             "symbol": symbol,
             "ok": True,
@@ -143,6 +178,10 @@ def execute_call(client: TradingClient, call: dict[str, Any], qty: int) -> dict[
             return {"symbol": symbol, "ok": True, "notes": f"already short {held} — skip"}
         if held > 0:
             _flatten(client, symbol)
+        qty, why = _risk_gate(client, symbol, "sell", qty, price)
+        if not qty:
+            closed = f"closed long {held}; " if held > 0 else ""
+            return {"symbol": symbol, "ok": True, "action": "BLOCKED", "notes": closed + why}
         extra = _bracket(OrderSide.SELL, qty, stop, target)
         order = client.submit_order(
             MarketOrderRequest(
@@ -153,6 +192,7 @@ def execute_call(client: TradingClient, call: dict[str, Any], qty: int) -> dict[
                 **extra,
             )
         )
+        trader_bridge.record_placed(symbol, "sell", qty, str(order.id))
         return {
             "symbol": symbol,
             "ok": True,

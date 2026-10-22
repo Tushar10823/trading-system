@@ -23,6 +23,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.trading.requests import MarketOrderRequest
 
+import trader_bridge
 from market_data import fetch_intraday_bars, load_keys
 from signal_engine import format_signal_report, generate_signal
 
@@ -103,15 +104,18 @@ def execute_auto_trade(
             }
         account = client.get_account()
         budget = float(account.buying_power) * BUY_POWER_FRACTION
-        shares = int(budget // close)
+        shares = trader_bridge.size_buy(client, symbol, close, budget)
         if shares < 1:
             return {
                 "order_id": "",
                 "order_status": "skipped",
-                "notes": "insufficient BP for 1 share",
+                "notes": "no room for 1 share inside trader-risk limits",
                 "side": "",
                 "qty": 0,
             }
+        passed, reasons = trader_bridge.check_order(client, symbol, "buy", shares, close)
+        if not passed:
+            return trader_bridge.blocked_result(symbol, "buy", shares, reasons)
         order = client.submit_order(
             MarketOrderRequest(
                 symbol=symbol,
@@ -120,6 +124,7 @@ def execute_auto_trade(
                 time_in_force=TimeInForce.DAY,
             )
         )
+        trader_bridge.record_placed(symbol, "buy", shares, str(order.id))
         return {
             "order_id": str(order.id),
             "order_status": str(order.status),
@@ -138,6 +143,9 @@ def execute_auto_trade(
                 "qty": 0,
             }
         shares = int(qty_held)
+        passed, reasons = trader_bridge.check_order(client, symbol, "sell", shares, close)
+        if not passed:
+            return trader_bridge.blocked_result(symbol, "sell", shares, reasons)
         order = client.submit_order(
             MarketOrderRequest(
                 symbol=symbol,
@@ -146,6 +154,7 @@ def execute_auto_trade(
                 time_in_force=TimeInForce.DAY,
             )
         )
+        trader_bridge.record_placed(symbol, "sell", shares, str(order.id))
         return {
             "order_id": str(order.id),
             "order_status": str(order.status),
