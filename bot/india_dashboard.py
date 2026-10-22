@@ -23,9 +23,10 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from india_intraday_calls import (
-    DEFAULT_WATCHLIST,
+    SMALL_SET,
     analyze_symbol,
     log_calls,
+    session_watchlist,
 )
 from india_market_data import is_nse_market_hours, minutes_to_nse_close
 from phase55_watch import ACTIONABLE, evaluate_changes, snapshot_actionable
@@ -46,12 +47,13 @@ STATE: dict[str, Any] = {
     "scanned_at": "",
     "next_scan_at": "",
     "interval_min": 30,
-    "watchlist": list(DEFAULT_WATCHLIST),
+    "watchlist": session_watchlist(),
     "calls": [],
     "events": [],
     "error": "",
     "nse_open": False,
     "minutes_to_close": 0,
+    "paper_book": True,
 }
 PREVIOUS_ACTIONABLE: dict[str, dict[str, Any]] = {}
 WAKE = threading.Event()
@@ -87,7 +89,7 @@ def restore_from_prev() -> None:
     PREVIOUS_ACTIONABLE = prev_calls
     with LOCK:
         STATE["events"] = list(data.get("events") or [])[-80:]
-        STATE["watchlist"] = list(data.get("watchlist") or DEFAULT_WATCHLIST)
+        STATE["watchlist"] = session_watchlist()
 
 
 def slim_call(c: dict[str, Any]) -> dict[str, Any]:
@@ -107,6 +109,7 @@ def slim_call(c: dict[str, Any]) -> dict[str, Any]:
         "target_pct": c.get("target_pct"),
         "target_inr": c.get("target_inr"),
         "target_on_10": c.get("target_on_10"),
+        "sleeve": c.get("sleeve") or ("small" if str(c.get("symbol", "")).upper() in SMALL_SET else "large"),
     }
 
 
@@ -121,6 +124,18 @@ def public_state() -> dict[str, Any]:
             out["next_scan_in"] = f"{secs // 60}m {secs % 60}s"
         except ValueError:
             out["next_scan_in"] = nxt
+    try:
+        from india_paper import public_book, public_small_book
+
+        paper = public_book()
+        small = public_small_book()
+        out["paper"] = paper
+        out["paper_small"] = small
+        out["kpi"] = paper.get("kpi") or {}
+        out["kpi_small"] = small.get("kpi") or {}
+        out["paper_book"] = True
+    except Exception as exc:
+        print(f"NSE paper/KPI refresh failed: {exc}", flush=True)
     return out
 
 
@@ -166,6 +181,16 @@ def run_scan(symbols: list[str], interval_min: int) -> None:
         change_lines = evaluate_changes(PREVIOUS_ACTIONABLE, calls)
         PREVIOUS_ACTIONABLE = snapshot_actionable(calls)
 
+        try:
+            from india_paper import apply_new_calls
+
+            _book, paper_notes = apply_new_calls(calls, 10)
+            for line in paper_notes:
+                change_lines.append(f"PAPER {line}")
+                print(f"  PAPER {line}")
+        except Exception as exc:
+            print(f"  paper book: {exc}")
+
         events: list[dict[str, str]] = []
         with LOCK:
             events = list(STATE.get("events") or [])
@@ -195,8 +220,8 @@ def run_scan(symbols: list[str], interval_min: int) -> None:
         for c in calls:
             if c.get("action") in ("BUY", "SELL", "EXIT"):
                 print(
-                    f"  {c['action']:4} {c['symbol']:12} @ ₹{c['entry']} "
-                    f"SL ₹{c['stop']} TP ₹{c['target']} wait {c.get('wait_until')}"
+                    f"  {c['action']:4} {c['symbol']:12} @ Rs {c['entry']} "
+                    f"SL {c['stop']} TP {c['target']} wait {c.get('wait_until')}"
                 )
     except Exception as exc:  # noqa: BLE001
         with LOCK:
@@ -216,6 +241,17 @@ def loop(symbols: list[str], interval_min: int) -> None:
         WAKE.clear()
 
 
+def _live_marks() -> None:
+    from india_paper import refresh_mtm
+
+    while True:
+        try:
+            refresh_mtm({})
+        except Exception as exc:
+            print(f"NSE live mark failed: {exc}", flush=True)
+        time.sleep(15)
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args: Any) -> None:
         if "/api/" not in (args[0] if args else ""):
@@ -230,12 +266,23 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:  # noqa: N802
-        if self.path.split("?", 1)[0] == "/api/state":
+        path = self.path.split("?", 1)[0]
+        if path == "/api/state":
             body = json.dumps(public_state(), default=str).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
-        if self.path in ("/", "/index.html"):
+        if path == "/api/paper":
+            from india_paper import refresh_mtm
+
+            body = json.dumps(refresh_mtm({}), default=str).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+        if path in ("/", "/index.html"):
             self._send(200, HTML_FILE.read_bytes(), "text/html; charset=utf-8")
+            return
+        if path == "/state.json":
+            body = json.dumps(public_state(), default=str).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
             return
         self._send(404, b"not found", "text/plain")
 
@@ -273,11 +320,22 @@ def main() -> None:
     parser.add_argument("--site-dir", default=str(SITE_DIR))
     args = parser.parse_args()
 
-    symbols = list(DEFAULT_WATCHLIST)
+    symbols = session_watchlist()
     restore_from_prev()
     with LOCK:
         STATE["interval_min"] = max(1, args.interval)
         STATE["watchlist"] = symbols
+
+    try:
+        from india_paper import flatten_after_hours_leftovers
+
+        leftover = flatten_after_hours_leftovers()
+        if leftover:
+            print("Flattened after-hours leftover lots:")
+            for line in leftover:
+                print(f"  {line}")
+    except Exception as exc:
+        print(f"Could not flatten after-hours leftovers: {exc}")
 
     if args.once:
         run_scan(symbols, max(1, args.interval))
@@ -288,13 +346,16 @@ def main() -> None:
         target=loop, args=(symbols, max(1, args.interval)), daemon=True
     )
     worker.start()
+    threading.Thread(target=_live_marks, daemon=True).start()
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"NSE dashboard on this PC:  http://127.0.0.1:{args.port}")
     lan = _lan_ip()
     if lan:
         print(f"On your phone (same Wi-Fi): http://{lan}:{args.port}")
-    print(f"Scan every {args.interval} min · {len(symbols)} Nifty liquid names")
+    print(f"Scan every {args.interval} min · {len(symbols)} names (Nifty + Rs 1k small sleeve)")
+    print("Large book Rs 10 lakh · 10 shares · 0.08%/side")
+    print("Small book Rs 1,000 · qty sized to budget · 0.20%/side · one-day confidence check")
     print("Keep this PC awake. Ctrl+C to stop.")
     try:
         httpd.serve_forever()

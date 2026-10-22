@@ -91,3 +91,26 @@ def minutes_to_nse_close() -> int:
     now = datetime.now(IST)
     close = now.replace(hour=15, minute=30, second=0, microsecond=0)
     return max(int((close - now).total_seconds() // 60), 0)
+
+
+def fetch_latest_prices(symbols: list[str]) -> dict[str, float]:
+    """Last Yahoo print for open NSE paper marks."""
+    out: dict[str, float] = {}
+    for raw in symbols:
+        sym = str(raw).upper().strip().removesuffix(".NS")
+        if not sym:
+            continue
+        try:
+            ticker = yf.Ticker(to_nse_symbol(sym))
+            px = None
+            try:
+                px = float(ticker.fast_info["last_price"])
+            except Exception:
+                hist = ticker.history(period="1d", interval="1m")
+                if hist is not None and not hist.empty:
+                    px = float(hist["Close"].iloc[-1])
+            if px and px > 0:
+                out[sym] = px
+        except Exception:
+            continue
+    return out

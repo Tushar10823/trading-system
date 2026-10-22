@@ -119,9 +119,11 @@ def mark_to_market(book: dict[str, Any], prices: dict[str, float]) -> list[str]:
             hit_stop = stop is not None and px >= stop
             hit_tp = target is not None and px <= target
         if hit_stop:
-            notes.append(_close(book, pos, px, "STOP"))
+            fill = stop if stop is not None else px
+            notes.append(_close(book, pos, fill, "STOP"))
         elif hit_tp:
-            notes.append(_close(book, pos, px, "TARGET"))
+            fill = target if target is not None else px
+            notes.append(_close(book, pos, fill, "TARGET"))
     return notes
 
 
@@ -223,6 +225,30 @@ def apply_new_calls(calls: list[dict[str, Any]], qty: int = DEFAULT_QTY) -> tupl
     return book, notes
 
 
+def refresh_mtm(prices: dict[str, float] | None = None) -> dict[str, Any]:
+    """Update last/P&L from scan prices plus a live IEX print."""
+    book = load_book()
+    px = {str(k).upper(): float(v) for k, v in (prices or {}).items()}
+    held = [str(p.get("symbol", "")).upper() for p in book.get("positions") or [] if p.get("symbol")]
+    if held:
+        try:
+            from market_data import fetch_latest_prices
+
+            live = fetch_latest_prices(held)
+            if live:
+                px.update(live)
+        except Exception:
+            pass
+    if px:
+        mark_to_market(book, px)
+        book["cash"] = round(float(book["cash"]), 2)
+        book["open_pnl"] = round(sum(float(p.get("pnl") or 0) for p in book["positions"]), 2)
+        book["equity"] = round(float(book["cash"]) + float(book["open_pnl"]), 2)
+        book["marked_at"] = now_ist()
+        save_book(book)
+    return public_book()
+
+
 def public_book() -> dict[str, Any]:
     book = load_book()
     open_pnl = sum(float(p.get("pnl") or 0) for p in book.get("positions") or [])
@@ -237,4 +263,5 @@ def public_book() -> dict[str, Any]:
         "positions": book.get("positions") or [],
         "trades": list(reversed(book.get("trades") or []))[:15],
         "armed": bool(book.get("armed")),
+        "marked_at": book.get("marked_at") or "",
     }

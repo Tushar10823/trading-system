@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -15,7 +16,11 @@ import pandas as pd
 from dotenv import load_dotenv
 from alpaca.data.enums import DataFeed
 from alpaca.data.historical import StockHistoricalDataClient
-from alpaca.data.requests import StockBarsRequest
+from alpaca.data.requests import (
+    StockBarsRequest,
+    StockLatestQuoteRequest,
+    StockLatestTradeRequest,
+)
 from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 
 
@@ -132,3 +137,99 @@ def fetch_intraday_bars(
             "for indicators. Try a more liquid symbol or larger lookback."
         )
     return df
+
+
+_PRICE_CACHE: dict[str, float] = {}
+_PRICE_CACHE_AT = 0.0
+_PRICE_CLIENT: StockHistoricalDataClient | None = None
+_PRICE_TTL = 1.0
+
+
+def _price_client() -> StockHistoricalDataClient:
+    global _PRICE_CLIENT
+    if _PRICE_CLIENT is None:
+        api_key, secret_key = load_keys()
+        _PRICE_CLIENT = StockHistoricalDataClient(api_key, secret_key)
+    return _PRICE_CLIENT
+
+
+def _as_map(payload: object) -> dict:
+    if not payload:
+        return {}
+    data = payload if isinstance(payload, dict) else getattr(payload, "data", payload)
+    if not hasattr(data, "items"):
+        return {}
+    return {str(k).upper(): v for k, v in data.items()}
+
+
+def _mid_quote(quote: object) -> float | None:
+    try:
+        bid = float(getattr(quote, "bid_price", 0) or 0)
+        ask = float(getattr(quote, "ask_price", 0) or 0)
+    except (TypeError, ValueError):
+        return None
+    if bid > 0 and ask > 0:
+        return (bid + ask) / 2
+    if ask > 0:
+        return ask
+    if bid > 0:
+        return bid
+    return None
+
+
+def fetch_latest_prices(symbols: list[str]) -> dict[str, float]:
+    """Live IEX mark: tight quote mid, otherwise last trade."""
+    global _PRICE_CACHE_AT
+    tickers = sorted({str(s).upper() for s in symbols if s})
+    if not tickers:
+        return {}
+    now = time.time()
+    if now - _PRICE_CACHE_AT < _PRICE_TTL and all(s in _PRICE_CACHE for s in tickers):
+        return {s: _PRICE_CACHE[s] for s in tickers}
+    client = _price_client()
+    quotes = {}
+    trades = {}
+    try:
+        quotes = _as_map(
+            client.get_stock_latest_quote(
+                StockLatestQuoteRequest(symbol_or_symbols=tickers, feed=DataFeed.IEX)
+            )
+        )
+    except Exception:
+        pass
+    try:
+        trades = _as_map(
+            client.get_stock_latest_trade(
+                StockLatestTradeRequest(symbol_or_symbols=tickers, feed=DataFeed.IEX)
+            )
+        )
+    except Exception:
+        pass
+    out: dict[str, float] = {}
+    for sym in tickers:
+        quote = quotes.get(sym)
+        trade = trades.get(sym)
+        last = None
+        if trade is not None:
+            try:
+                last = float(trade.price)
+            except (TypeError, ValueError, AttributeError):
+                last = None
+        mid = _mid_quote(quote) if quote is not None else None
+        mark = last
+        if mid is not None and quote is not None:
+            try:
+                bid = float(getattr(quote, "bid_price", 0) or 0)
+                ask = float(getattr(quote, "ask_price", 0) or 0)
+            except (TypeError, ValueError):
+                bid = ask = 0.0
+            if bid > 0 and ask > 0 and (ask - bid) / mid <= 0.0015:
+                mark = mid
+        if mark is None:
+            mark = mid
+        if mark is not None:
+            out[sym] = mark
+    if out:
+        _PRICE_CACHE.update(out)
+        _PRICE_CACHE_AT = now
+    return {s: _PRICE_CACHE[s] for s in tickers if s in _PRICE_CACHE}

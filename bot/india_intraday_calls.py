@@ -31,6 +31,10 @@ from intraday_calls import (
     FLATTEN_MINUTES,
     HOLD_MINUTES,
     IST,
+    median_bar_range,
+    STRONG_BUY_SCORE,
+    STRONG_SELL_SCORE,
+    WHIPPY_SYMBOLS,
     atr_value,
     decide_call,
     score_frame,
@@ -56,6 +60,35 @@ DEFAULT_WATCHLIST = [
     "WIPRO",
 ]
 
+# Cheaper liquid names for a one-day Rs 1,000 paper sleeve (qty sized to budget).
+SMALL_WATCHLIST = [
+    "IDEA",
+    "YESBANK",
+    "SUZLON",
+    "IRFC",
+    "PNB",
+    "IDFCFIRSTB",
+    "SAIL",
+    "IOC",
+    "BHEL",
+    "NHPC",
+    "NMDC",
+    "ZOMATO",
+]
+SMALL_SET = {s.upper() for s in SMALL_WATCHLIST}
+
+
+def session_watchlist() -> list[str]:
+    out: list[str] = []
+    for sym in DEFAULT_WATCHLIST + SMALL_WATCHLIST:
+        if sym not in out:
+            out.append(sym)
+    return out
+
+
+def sleeve_for(symbol: str) -> str:
+    return "small" if str(symbol).upper().removesuffix(".NS") in SMALL_SET else "large"
+
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 CALL_LOG = OUTPUT_DIR / "india_intraday_calls.csv"
 
@@ -70,7 +103,34 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
     confirm = score_frame(df5)
     action, note = decide_call(primary, confirm)
     atr = atr_value(df30)
-    stop_pct, target_pct = sl_tp_pct(price, atr)
+    stop_pct, target_pct = sl_tp_pct(price, atr, sym)
+    # Horizon is one 30m bar: first target must be reachable in that window.
+    typical = median_bar_range(df30, 20)
+    if price > 0 and typical > 0:
+        horizon_tgt = max(0.0010, min(0.35 * typical / price, target_pct))
+        target_pct = min(target_pct, horizon_tgt)
+    if sym in WHIPPY_SYMBOLS:
+        if action == "SELL" and (
+            float(primary["score"]) > STRONG_SELL_SCORE or float(confirm["score"]) > STRONG_SELL_SCORE
+        ):
+            action = "HOLD"
+            note = f"Hold {sym}: weak short — need 30m and 5m score <= {STRONG_SELL_SCORE:g}"
+        elif action == "BUY" and (
+            float(primary["score"]) < STRONG_BUY_SCORE or float(confirm["score"]) < STRONG_BUY_SCORE
+        ):
+            action = "HOLD"
+            note = f"Hold {sym}: weak long — need 30m and 5m score >= {STRONG_BUY_SCORE:g}"
+    # If the last hour of 5m bars never leaves the SL/TP box, do not fire a new Buy/Sell.
+    if action in ("BUY", "SELL") and len(df5) >= 12:
+        window = df5.tail(12)
+        span = float(window["high"].max() - window["low"].min())
+        box = price * (stop_pct + target_pct)
+        if box > 0 and span < box * 0.85:
+            action = "HOLD"
+            note = (
+                f"Hold {sym}: 5m range Rs {span:.1f} is inside the "
+                f"stop/target box Rs {box:.1f} — wait for a break"
+            )
     plan = trade_plan(action, price, stop_pct, target_pct)
 
     mtc = minutes_to_nse_close()
@@ -118,6 +178,7 @@ def analyze_symbol(symbol: str) -> dict[str, Any]:
         "stop_inr": stop_inr,
         "target_inr": target_inr,
         "target_on_10": round(target_inr * 10, 2),
+        "sleeve": sleeve_for(sym),
     }
 
 
@@ -236,7 +297,7 @@ def run_once(symbols: list[str]) -> list[dict[str, Any]]:
 
 def main() -> None:
     args = parse_args()
-    symbols = [s.upper().removesuffix(".NS") for s in args.symbols] or DEFAULT_WATCHLIST
+    symbols = [s.upper().removesuffix(".NS") for s in args.symbols] or session_watchlist()
     print("Building NSE intraday calls...")
     if args.loop <= 0:
         run_once(symbols)

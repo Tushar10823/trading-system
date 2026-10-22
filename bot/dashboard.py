@@ -151,6 +151,20 @@ def public_state() -> dict[str, Any]:
             out["next_scan_in"] = f"{secs // 60}m {secs % 60}s"
         except ValueError:
             out["next_scan_in"] = nxt
+    if CFG.get("paper_book"):
+        try:
+            from internal_paper import refresh_mtm
+
+            prices: dict[str, float] = {}
+            for c in out.get("calls") or []:
+                try:
+                    prices[str(c["symbol"]).upper()] = float(c["price"])
+                except (TypeError, ValueError, KeyError):
+                    continue
+            out["paper"] = refresh_mtm(prices)
+            out["paper_book"] = True
+        except Exception as exc:
+            print(f"paper P&L refresh failed: {exc}", flush=True)
     return out
 
 
@@ -184,6 +198,13 @@ def run_scan(top_n: int, interval_min: int) -> None:
         persist_state()
 
         symbols, added = load_watchlist()
+        try:
+            from internal_paper import load_book as load_paper_book
+
+            held = [p["symbol"] for p in (load_paper_book().get("positions") or [])]
+            symbols = list(dict.fromkeys(list(symbols) + held))
+        except Exception:
+            pass
         result = collect_scan(top_n=top_n, verbose=False, extra_symbols=symbols)
         calls = result.get("calls") or []
         if calls:
@@ -296,6 +317,18 @@ def loop(top_n: int, interval_min: int) -> None:
         WAKE.clear()
 
 
+def live_pnl_loop() -> None:
+    """Mark open paper positions about once a second from IEX."""
+    from internal_paper import refresh_mtm
+
+    while True:
+        try:
+            refresh_mtm({})
+        except Exception as exc:
+            print(f"live P&L mark failed: {exc}", flush=True)
+        time.sleep(1)
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args: Any) -> None:
         if "/api/" not in (args[0] if args else ""):
@@ -310,8 +343,15 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:  # noqa: N802
-        if self.path.split("?", 1)[0] == "/api/state":
+        path = self.path.split("?", 1)[0]
+        if path == "/api/state":
             body = json.dumps(public_state(), default=str).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+        if path == "/api/paper":
+            from internal_paper import refresh_mtm
+
+            body = json.dumps(refresh_mtm({}), default=str).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
         if self.path in ("/", "/index.html"):
@@ -394,6 +434,8 @@ def main() -> None:
 
     worker = threading.Thread(target=loop, args=(CFG["top"], CFG["interval"]), daemon=True)
     worker.start()
+    if CFG["paper_book"]:
+        threading.Thread(target=live_pnl_loop, daemon=True).start()
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Dashboard on this PC:  http://127.0.0.1:{args.port}")
@@ -404,6 +446,7 @@ def main() -> None:
     if CFG["paper_book"]:
         print(f"Paper book ON this page · {CFG['qty']} shares · starting $100,000 fake cash")
         print("Not TradingView and not Alpaca. Watch positions on http://127.0.0.1:8787")
+        print("Open P&L marks about every 1s from Alpaca IEX quotes.")
     if CFG["auto_trade"]:
         print("Also sending Alpaca paper orders (optional).")
     print("Keep this PC awake. Ctrl+C to stop.")

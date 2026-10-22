@@ -110,6 +110,7 @@
       <h1>Intraday paper calls</h1>
       <div class="sub">30m chart + 5m confirm · IST · paper research, not financial advice</div>
       <div class="sub" id="broker">Orders: log only</div>
+      <div class="sub" id="live-pnl">P&amp;L: loading…</div>
     </div>
     <div class="meta">
       <div><span id="status" class="status">loading</span></div>
@@ -124,6 +125,23 @@
   </nav>
   <main>
     <div id="panel-predictions" class="panel active">
+      <section style="margin-bottom:22px">
+        <h2>Open P&amp;L</h2>
+        <div class="sub" id="paper-summary-left">—</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Stock</th>
+              <th>Side</th>
+              <th>Qty</th>
+              <th>Entry</th>
+              <th>Last</th>
+              <th>P&amp;L $</th>
+            </tr>
+          </thead>
+          <tbody id="positions-left"></tbody>
+        </table>
+      </section>
       <section style="margin-bottom:22px">
         <h2>Auto-added (Buy / Sell appeared)</h2>
         <div id="watchlist">—</div>
@@ -230,6 +248,91 @@
 
     let hosted = false;
     let chartSymbol = "";
+    let posKey = "";
+
+    function money(n, sign) {
+      const v = Number(n || 0);
+      const txt = v.toFixed(2);
+      return sign ? ((v >= 0 ? "+" : "") + txt) : txt;
+    }
+
+    function applyPaper(paper) {
+      if (!paper) return;
+      const tot = paper.total_pnl;
+      const totTxt = tot == null ? "—" : money(tot, true);
+      const marked = paper.marked_at ? " · live " + paper.marked_at : " · live IEX";
+      const summary =
+        `Equity $${money(paper.equity)} · cash $${money(paper.cash)} · ` +
+        `open P&L $${money(paper.open_pnl)} · realized $${money(paper.realized_pnl)} · total ${totTxt}`;
+      if ($("paper-summary")) $("paper-summary").textContent = summary;
+      if ($("paper-summary-left")) $("paper-summary-left").textContent = summary;
+      if ($("live-pnl")) {
+        $("live-pnl").textContent =
+          `P&L total ${totTxt} · open $${money(paper.open_pnl)} · realized $${money(paper.realized_pnl)}${marked}`;
+      }
+      const pos = paper.positions || [];
+      const key = pos.map((p) => `${p.symbol}|${p.side}|${p.qty}|${p.entry}`).join(",");
+      if (key !== posKey) {
+        posKey = key;
+        if ($("positions")) {
+          $("positions").innerHTML = pos.length
+            ? pos.map((p) => `
+              <tr class="${p.side === "long" ? "buy" : "sell"} clickable" data-symbol="${p.symbol}">
+                <td>${p.symbol}</td>
+                <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
+                <td>${p.qty}</td>
+                <td>${p.entry}</td>
+                <td data-k="last">${p.last}</td>
+                <td>${p.stop}</td>
+                <td>${p.target}</td>
+                <td data-k="pnl">${money(p.pnl, true)}</td>
+              </tr>`).join("")
+            : `<tr><td colspan="8">No open paper position yet. Next new Buy/Sell fills 10 shares here.</td></tr>`;
+        }
+        if ($("positions-left")) {
+          $("positions-left").innerHTML = pos.length
+            ? pos.map((p) => `
+              <tr class="${p.side === "long" ? "buy" : "sell"} clickable" data-symbol="${p.symbol}">
+                <td>${p.symbol}</td>
+                <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
+                <td>${p.qty}</td>
+                <td>${p.entry}</td>
+                <td data-k="last">${p.last}</td>
+                <td data-k="pnl">${money(p.pnl, true)}</td>
+              </tr>`).join("")
+            : `<tr><td colspan="6">No open paper position yet.</td></tr>`;
+        }
+        document.querySelectorAll("#positions tr[data-symbol], #positions-left tr[data-symbol]").forEach((row) => {
+          row.addEventListener("click", () => showChart(row.getAttribute("data-symbol"), false));
+        });
+      } else {
+        pos.forEach((p) => {
+          document.querySelectorAll(`tr[data-symbol="${p.symbol}"]`).forEach((row) => {
+            const last = row.querySelector('[data-k="last"]');
+            const pnl = row.querySelector('[data-k="pnl"]');
+            if (last) last.textContent = p.last;
+            if (pnl) pnl.textContent = money(p.pnl, true);
+          });
+        });
+      }
+      if ($("fills")) {
+        const fills = paper.trades || [];
+        $("fills").innerHTML = fills.length
+          ? fills.map((t) => `<li><span>${t.at}</span> · ${t.notes}${t.pnl ? " · $" + t.pnl : ""}</li>`).join("")
+          : "<li>No fills yet.</li>";
+      }
+    }
+
+    async function refreshPaper() {
+      if (!hosted) return;
+      try {
+        const res = await fetch("/api/paper", { cache: "no-store" });
+        if (!res.ok) return;
+        applyPaper(await res.json());
+      } catch (err) {
+        /* keep last numbers */
+      }
+    }
 
     const TV_EXCHANGE = {
       SPY: "AMEX",
@@ -306,35 +409,7 @@
       $("broker").textContent = s.paper_book
         ? "Auto-fill: paper book on this page (not TradingView, not Alpaca)"
         : (s.auto_trade ? "Auto-trade: Alpaca PAPER" : "Orders: log only");
-      const paper = s.paper || {};
-      if (s.paper_book || s.paper) {
-        const tot = paper.total_pnl;
-        const totTxt = tot == null ? "—" : ((tot >= 0 ? "+" : "") + tot.toFixed(2));
-        $("paper-summary").textContent =
-          `Equity $${Number(paper.equity || 0).toFixed(2)} · cash $${Number(paper.cash || 0).toFixed(2)} · ` +
-          `open P&L $${Number(paper.open_pnl || 0).toFixed(2)} · realized $${Number(paper.realized_pnl || 0).toFixed(2)} · total ${totTxt}`;
-        const pos = paper.positions || [];
-        $("positions").innerHTML = pos.length
-          ? pos.map((p) => `
-            <tr class="${p.side === "long" ? "buy" : "sell"} clickable" data-symbol="${p.symbol}">
-              <td>${p.symbol}</td>
-              <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
-              <td>${p.qty}</td>
-              <td>${p.entry}</td>
-              <td>${p.last}</td>
-              <td>${p.stop}</td>
-              <td>${p.target}</td>
-              <td>${p.pnl >= 0 ? "+" : ""}${Number(p.pnl).toFixed(2)}</td>
-            </tr>`).join("")
-          : `<tr><td colspan="8">No open paper position yet. Next new Buy/Sell fills 10 shares here.</td></tr>`;
-        $("positions").querySelectorAll("tr[data-symbol]").forEach((row) => {
-          row.addEventListener("click", () => showChart(row.getAttribute("data-symbol"), false));
-        });
-        const fills = paper.trades || [];
-        $("fills").innerHTML = fills.length
-          ? fills.map((t) => `<li><span>${t.at}</span> · ${t.notes}${t.pnl ? " · $" + t.pnl : ""}</li>`).join("")
-          : "<li>No fills yet.</li>";
-      }
+      if (s.paper_book || s.paper) applyPaper(s.paper || {});
 
       const wl = s.watchlist || [];
       const added = s.added || {};
@@ -399,7 +474,9 @@
     setTab(startTab === "pnl" ? "pnl" : "predictions");
 
     refresh();
-    setInterval(refresh, 4000);
+    refreshPaper();
+    setInterval(refresh, 5000);
+    setInterval(refreshPaper, 1000);
   </script>
 </body>
 </html>

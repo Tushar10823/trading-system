@@ -68,13 +68,16 @@
     .note { font-size: 12px; color: var(--muted); max-width: 280px; }
     .link { color: var(--muted); font-size: 12px; margin-top: 6px; }
     .link a { color: var(--text); }
+    .pass { color: var(--buy); }
+    .fail { color: var(--sell); }
+    .kpis td:nth-child(3), .kpis td:nth-child(4) { font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
   <header>
     <div>
       <h1>NSE intraday paper calls</h1>
-      <div class="sub">30m + 5m confirm · Yahoo Finance · IST · paper research only</div>
+      <div class="sub">30m + 5m confirm · Yahoo Finance · IST · paper research only · Rs 1k small-name day test</div>
       <div class="link"><a href="../">US board</a></div>
     </div>
     <div class="meta">
@@ -86,6 +89,55 @@
     </div>
   </header>
   <main>
+    <section style="margin-bottom:22px">
+      <h2>KPI scorecard (your spec · net of costs)</h2>
+      <div class="sub" id="kpi-verdict">—</div>
+      <div class="sub" id="kpi-conf">Confidence —</div>
+      <table class="kpis">
+        <thead>
+          <tr>
+            <th>KPI</th>
+            <th>Target</th>
+            <th>Live</th>
+            <th>Gate</th>
+          </tr>
+        </thead>
+        <tbody id="kpis"></tbody>
+      </table>
+      <div class="sub" id="paper-summary" style="margin-top:10px">—</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Stock</th>
+            <th>Side</th>
+            <th>Qty</th>
+            <th>Entry</th>
+            <th>Last</th>
+            <th>P&amp;L Rs</th>
+          </tr>
+        </thead>
+        <tbody id="positions"></tbody>
+      </table>
+      <h2 style="margin-top:16px">Closed fills</h2>
+      <ul class="events" id="fills"></ul>
+      <h2 style="margin-top:22px">Rs 1,000 small-name sleeve (one-day confidence check)</h2>
+      <div class="sub" id="small-kpi">—</div>
+      <div class="sub" id="small-summary">—</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Stock</th>
+            <th>Side</th>
+            <th>Qty</th>
+            <th>Entry</th>
+            <th>Last</th>
+            <th>P&amp;L Rs</th>
+          </tr>
+        </thead>
+        <tbody id="small-positions"></tbody>
+      </table>
+      <ul class="events" id="small-fills"></ul>
+    </section>
     <div class="grid">
       <section>
         <h2>Board</h2>
@@ -93,6 +145,7 @@
           <thead>
             <tr>
               <th>Stock</th>
+              <th>Sleeve</th>
               <th>TV</th>
               <th>Price</th>
               <th>Entry</th>
@@ -137,10 +190,11 @@
       const urls = ["/api/state", "./state.json"];
       for (const url of urls) {
         try {
-          const res = await fetch(url + (url.endsWith(".json") ? "?t=" + Date.now() : ""), { cache: "no-store" });
+          const q = url.includes("?") || url.endsWith(".json") ? (url.includes("?") ? url : url + "?t=" + Date.now()) : url;
+          const res = await fetch(q, { cache: "no-store", signal: AbortSignal.timeout(8000) });
           if (!res.ok) continue;
           const data = await res.json();
-          hosted = url.includes("/api/");
+          hosted = true;
           return data;
         } catch (err) {
           /* try next */
@@ -167,10 +221,88 @@
       const mtc = s.minutes_to_close;
       $("nse").textContent = nseOpen ? `open · ${mtc}m to close` : "closed";
 
+      const paper = s.paper || {};
+      const kpi = s.kpi || paper.kpi || {};
+      const pct = (v, d) => (v == null ? "—" : (Number(v) * 100).toFixed(d) + "%");
+      const rs = (v) => (v == null ? "—" : "Rs " + Number(v).toFixed(2));
+      $("kpi-verdict").textContent = kpi.verdict || "Waiting for closed paper trades.";
+      $("kpi-conf").textContent =
+        kpi.confidence == null
+          ? "Confidence —"
+          : `Confidence ${kpi.confidence}/100` + (paper.paused ? " · KILL SWITCH paused new entries" : "");
+      function gate(id) {
+        const g = (kpi.gates || []).find((x) => x.id === id);
+        if (!g) return "—";
+        return g.pass ? "pass" : "fail";
+      }
+      const rows = [
+        ["Win rate", "report always", pct(kpi.win_rate, 1), (kpi.trades || 0) > 0 ? "track" : "—"],
+        ["Payoff ratio", "> 1.5 (or WR > 55% if ~1)", kpi.payoff_ratio == null ? "—" : Number(kpi.payoff_ratio).toFixed(2), gate("payoff")],
+        ["Profit factor", "> 1.3", kpi.profit_factor_infinite ? "∞" : (kpi.profit_factor == null ? "—" : Number(kpi.profit_factor).toFixed(2)), gate("profit_factor")],
+        ["Expectancy / trade", "> 0 after costs", rs(kpi.expectancy), gate("expectancy")],
+        ["Max drawdown", "< 20%", pct(kpi.max_drawdown, 1), gate("drawdown")],
+        ["Closed trades", "100+ before trusting", String(kpi.trades ?? 0), gate("sample")],
+        ["CAGR / Sharpe / Sortino", "need longer sample", "n/a yet", "hold"],
+      ];
+      $("kpis").innerHTML = rows.map((r) => {
+        const cls = r[3] === "pass" ? "pass" : r[3] === "fail" ? "fail" : "";
+        return `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="${cls}">${r[3]}</td></tr>`;
+      }).join("");
+      const tot = paper.total_pnl;
+      $("paper-summary").textContent =
+        `Equity ${rs(paper.equity)} · cash ${rs(paper.cash)} · open ${rs(paper.open_pnl)} · ` +
+        `realized ${rs(paper.realized_pnl)} · total ${tot == null ? "—" : ((tot >= 0 ? "+" : "") + "Rs " + Number(tot).toFixed(2))} · ` +
+        (kpi.cost_note || "10 shares · Rs 10 lakh fake");
+      const pos = paper.positions || [];
+      $("positions").innerHTML = pos.length
+        ? pos.map((p) => `
+          <tr class="${p.side === "long" ? "buy" : "sell"}">
+            <td>${p.symbol}</td>
+            <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
+            <td>${p.qty}</td>
+            <td>${p.entry}</td>
+            <td>${p.last}</td>
+            <td>${p.pnl >= 0 ? "+" : ""}${Number(p.pnl).toFixed(2)}</td>
+          </tr>`).join("")
+        : `<tr><td colspan="6">No open paper position. First scan arms; next new Buy/Sell fills 10 shares.</td></tr>`;
+      const fills = paper.trades || [];
+      $("fills").innerHTML = fills.length
+        ? fills.map((t) => `<li><span>${t.at}</span> · ${t.notes}</li>`).join("")
+        : "<li>No fills yet.</li>";
+
+      const small = s.paper_small || {};
+      const sk = s.kpi_small || small.kpi || {};
+      $("small-kpi").textContent =
+        sk.confidence == null
+          ? "Confidence — until this sleeve has closed trades."
+          : `Confidence ${sk.confidence}/100 · ${sk.wins || 0}W / ${sk.losses || 0}L of ${sk.trades || 0} closed · ${sk.verdict || ""}`;
+      const stot = small.total_pnl;
+      $("small-summary").textContent =
+        `Start ${rs(small.starting_cash)} · equity ${rs(small.equity)} · cash ${rs(small.cash)} · ` +
+        `open ${rs(small.open_pnl)} · realized ${rs(small.realized_pnl)} · ` +
+        `total ${stot == null ? "—" : ((stot >= 0 ? "+" : "") + "Rs " + Number(stot).toFixed(2))}`;
+      const spos = small.positions || [];
+      $("small-positions").innerHTML = spos.length
+        ? spos.map((p) => `
+          <tr class="${p.side === "long" ? "buy" : "sell"}">
+            <td>${p.symbol}</td>
+            <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
+            <td>${p.qty}</td>
+            <td>${p.entry}</td>
+            <td>${p.last}</td>
+            <td>${p.pnl >= 0 ? "+" : ""}${Number(p.pnl).toFixed(2)}</td>
+          </tr>`).join("")
+        : `<tr><td colspan="6">Empty until 09:15 IST. First cash-session scan arms; next new Buy/Sell sizes lots into Rs 1,000.</td></tr>`;
+      const sfills = small.trades || [];
+      $("small-fills").innerHTML = sfills.length
+        ? sfills.map((t) => `<li><span>${t.at}</span> · ${t.notes}</li>`).join("")
+        : "<li>No small-sleeve fills yet.</li>";
+
       const calls = s.calls || [];
       $("board").innerHTML = calls.map((c) => `
         <tr class="${rowClass(c.action)}">
           <td>${c.symbol}</td>
+          <td>${c.sleeve === "small" ? "small" : "large"}</td>
           <td class="action">${tvLabel(c.action)}</td>
           <td>₹${c.price ?? "—"}</td>
           <td>${c.entry ?? "—"}</td>
@@ -182,7 +314,7 @@
           <td>${c.signal_30m || "—"} / ${c.signal_5m || "—"}</td>
           <td class="note">${c.confidence || ""}</td>
         </tr>
-      `).join("") || `<tr><td colspan="11">Waiting for first scan…</td></tr>`;
+      `).join("") || `<tr><td colspan="12">Waiting for first scan…</td></tr>`;
 
       const events = s.events || [];
       $("events").innerHTML = events.slice().reverse().slice(0, 25).map((e) =>
