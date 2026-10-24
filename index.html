@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paper calls</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #171e26;
+      --line: #2a3440;
+      --text: #e8eef4;
+      --muted: #8b9aab;
+      --buy: #3dd68c;
+      --sell: #ff6b6b;
+      --hold: #8b9aab;
+      --exit: #f0c14b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px 24px 12px;
+    }
+    h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+    .sub { color: var(--muted); font-size: 13px; }
+    .meta { text-align: right; font-size: 13px; color: var(--muted); }
+    .meta strong { color: var(--text); font-weight: 600; }
+    .status { display: inline-block; padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; }
+    .status.scanning { color: var(--exit); border-color: var(--exit); }
+    .status.error { color: var(--sell); border-color: var(--sell); }
+    .tabs {
+      display: flex;
+      gap: 12px;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .tabs-bottom { border-bottom: 0; border-top: 1px solid var(--line); margin-top: 28px; padding: 16px 0 0; }
+    main { padding: 20px 24px 40px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 10px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 1100px) {
+      .grid { grid-template-columns: 2fr 1fr; }
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 500; }
+    tr.buy td.action { color: var(--buy); font-weight: 650; }
+    tr.sell td.action { color: var(--sell); font-weight: 650; }
+    tr.exit td.action { color: var(--exit); font-weight: 650; }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover td { background: #1e2730; }
+    #tvwrap { height: 520px; border: 1px solid var(--line); margin-top: 8px; }
+    #tvwrap iframe { width: 100%; height: 100%; border: 0; }
+    .pill {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      margin: 0 6px 6px 0;
+    }
+    .pill.buy { color: var(--buy); border-color: var(--buy); }
+    .pill.sell { color: var(--sell); border-color: var(--sell); }
+    .events { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+    .events li { padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--muted); }
+    .events li span { color: var(--text); }
+    button {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover { border-color: var(--muted); }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .note { font-size: 12px; color: var(--muted); max-width: 280px; }
+    .tab-btn {
+      flex: 1;
+      min-height: 48px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      color: var(--text);
+    }
+    .tab-btn:hover { border-color: var(--muted); }
+    .tab-btn.active {
+      border-color: var(--text);
+      background: #24303c;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Intraday paper calls</h1>
+      <div class="sub">30m chart + 5m confirm · IST · paper research, not financial advice</div>
+      <div class="sub" id="broker">Orders: log only</div>
+    </div>
+    <div class="meta">
+      <div><span id="status" class="status">loading</span></div>
+      <div>Last scan: <strong id="last">—</strong></div>
+      <div>Next scan: <strong id="next">—</strong></div>
+      <div style="margin-top:8px"><button id="scan" type="button">Scan now</button></div>
+    </div>
+  </header>
+  <nav class="tabs" aria-label="Page sections">
+    <button type="button" class="tab-btn active" data-tab="predictions">Predictions</button>
+    <button type="button" class="tab-btn" data-tab="pnl">P&amp;L and charts</button>
+  </nav>
+  <main>
+    <div id="panel-predictions" class="panel active">
+      <section style="margin-bottom:22px">
+        <h2>Auto-added (Buy / Sell appeared)</h2>
+        <div id="watchlist">—</div>
+      </section>
+      <div class="grid">
+        <section>
+          <h2>Board</h2>
+          <p class="sub">Tap a stock to open its chart on the P&amp;L tab.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Stock</th>
+                <th>TV</th>
+                <th>Price</th>
+                <th>Entry</th>
+                <th>Stop</th>
+                <th>Target</th>
+                <th>Wait</th>
+                <th>30m / 5m</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="board"></tbody>
+          </table>
+        </section>
+        <section>
+          <h2>Updates</h2>
+          <ul class="events" id="events"></ul>
+        </section>
+      </div>
+      <div class="tabs tabs-bottom">
+        <button type="button" class="tab-btn active" data-tab="predictions">Predictions</button>
+        <button type="button" class="tab-btn" data-tab="pnl">P&amp;L and charts</button>
+      </div>
+    </div>
+
+    <div id="panel-pnl" class="panel">
+      <section style="margin-bottom:22px">
+        <h2>Paper account (this page · 10 shares · $100,000 fake)</h2>
+        <div class="sub" id="paper-summary">—</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Stock</th>
+              <th>Side</th>
+              <th>Qty</th>
+              <th>Entry</th>
+              <th>Last</th>
+              <th>Stop</th>
+              <th>Target</th>
+              <th>P&amp;L $</th>
+            </tr>
+          </thead>
+          <tbody id="positions"></tbody>
+        </table>
+        <h2 style="margin-top:18px">Fills</h2>
+        <ul class="events" id="fills"></ul>
+      </section>
+      <section>
+        <h2>TradingView chart (30m)</h2>
+        <div class="sub">
+          Showing <strong id="tvlabel">—</strong>
+          · <a id="tvlink" href="https://www.tradingview.com/" target="_blank" rel="noopener" style="color:#8b9aab">Open in TradingView</a>
+        </div>
+        <div id="tvwrap">
+          <iframe id="tvframe" title="TradingView chart" allowtransparency="true" scrolling="no"></iframe>
+        </div>
+      </section>
+      <div class="tabs tabs-bottom">
+        <button type="button" class="tab-btn" data-tab="predictions">Predictions</button>
+        <button type="button" class="tab-btn" data-tab="pnl">P&amp;L and charts</button>
+      </div>
+    </div>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function rowClass(action) {
+      if (action === "BUY") return "buy";
+      if (action === "SELL") return "sell";
+      if (action === "EXIT") return "exit";
+      return "";
+    }
+
+    function tvLabel(action) {
+      if (action === "BUY") return "Buy";
+      if (action === "SELL") return "Sell";
+      if (action === "EXIT") return "Exit long";
+      return "—";
+    }
+
+    function setTab(name) {
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-tab") === name);
+      });
+      document.querySelectorAll(".panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.id === "panel-" + name);
+      });
+      try { localStorage.setItem("boardTab", name); } catch (err) { /* ignore */ }
+      if (window.location.hash !== "#" + name) {
+        history.replaceState(null, "", "#" + name);
+      }
+    }
+
+    let hosted = false;
+    let chartSymbol = "";
+
+    const TV_EXCHANGE = {
+      SPY: "AMEX",
+      QQQ: "NASDAQ",
+      BABA: "NYSE",
+      CRM: "NYSE",
+      PLTR: "NYSE",
+      SMCI: "NASDAQ",
+      MSTR: "NASDAQ",
+      BRK: "NYSE",
+    };
+
+    function tvSymbol(sym) {
+      const s = String(sym || "").toUpperCase().replace("*", "").trim();
+      const ex = TV_EXCHANGE[s] || "NASDAQ";
+      return ex + ":" + s;
+    }
+
+    function tvEmbed(sym) {
+      const t = encodeURIComponent(tvSymbol(sym));
+      return (
+        "https://www.tradingview.com/widgetembed/?frameElementId=tvchart&symbol=" + t +
+        "&interval=30&hidesidetoolbar=0&symboledit=1&saveimage=0&theme=dark&style=1" +
+        "&timezone=Asia%2FKolkata&locale=en&withdateranges=1&hideideas=1"
+      );
+    }
+
+    function tvPage(sym) {
+      return "https://www.tradingview.com/chart/?symbol=" + encodeURIComponent(tvSymbol(sym));
+    }
+
+    function showChart(sym, jump) {
+      const s = String(sym || "").toUpperCase().replace("*", "").trim();
+      if (!s) return;
+      $("tvlabel").textContent = tvSymbol(s) + " · 30 minute";
+      $("tvlink").href = tvPage(s);
+      if (s !== chartSymbol) {
+        chartSymbol = s;
+        $("tvframe").src = tvEmbed(s);
+      }
+      if (jump) setTab("pnl");
+    }
+
+    async function loadState() {
+      const urls = ["/api/state", "./state.json"];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url + (url.endsWith(".json") ? "?t=" + Date.now() : ""), { cache: "no-store" });
+          if (!res.ok) continue;
+          const data = await res.json();
+          hosted = url.includes("/api/");
+          return data;
+        } catch (err) {
+          /* try next */
+        }
+      }
+      return null;
+    }
+
+    async function refresh() {
+      const s = await loadState();
+      if (!s) {
+        $("status").textContent = "offline";
+        $("status").className = "status error";
+        return;
+      }
+      $("scan").style.display = hosted ? "" : "none";
+      const status = $("status");
+      status.textContent = s.status || "idle";
+      status.className = "status " + (s.status || "");
+      $("last").textContent = s.scanned_at || "—";
+      $("next").textContent = s.next_scan_in || "every 30 min";
+      $("scan").disabled = s.status === "scanning";
+      $("broker").textContent = s.paper_book
+        ? "Auto-fill: paper book on this page (not TradingView, not Alpaca)"
+        : (s.auto_trade ? "Auto-trade: Alpaca PAPER" : "Orders: log only");
+      const paper = s.paper || {};
+      if (s.paper_book || s.paper) {
+        const tot = paper.total_pnl;
+        const totTxt = tot == null ? "—" : ((tot >= 0 ? "+" : "") + tot.toFixed(2));
+        $("paper-summary").textContent =
+          `Equity $${Number(paper.equity || 0).toFixed(2)} · cash $${Number(paper.cash || 0).toFixed(2)} · ` +
+          `open P&L $${Number(paper.open_pnl || 0).toFixed(2)} · realized $${Number(paper.realized_pnl || 0).toFixed(2)} · total ${totTxt}`;
+        const pos = paper.positions || [];
+        $("positions").innerHTML = pos.length
+          ? pos.map((p) => `
+            <tr class="${p.side === "long" ? "buy" : "sell"} clickable" data-symbol="${p.symbol}">
+              <td>${p.symbol}</td>
+              <td class="action">${p.side === "long" ? "Buy" : "Sell"}</td>
+              <td>${p.qty}</td>
+              <td>${p.entry}</td>
+              <td>${p.last}</td>
+              <td>${p.stop}</td>
+              <td>${p.target}</td>
+              <td>${p.pnl >= 0 ? "+" : ""}${Number(p.pnl).toFixed(2)}</td>
+            </tr>`).join("")
+          : `<tr><td colspan="8">No open paper position yet. Next new Buy/Sell fills 10 shares here.</td></tr>`;
+        $("positions").querySelectorAll("tr[data-symbol]").forEach((row) => {
+          row.addEventListener("click", () => showChart(row.getAttribute("data-symbol"), false));
+        });
+        const fills = paper.trades || [];
+        $("fills").innerHTML = fills.length
+          ? fills.map((t) => `<li><span>${t.at}</span> · ${t.notes}${t.pnl ? " · $" + t.pnl : ""}</li>`).join("")
+          : "<li>No fills yet.</li>";
+      }
+
+      const wl = s.watchlist || [];
+      const added = s.added || {};
+      if (!wl.length) {
+        $("watchlist").textContent = "None yet. Names appear here when a Buy or Sell fires.";
+      } else {
+        $("watchlist").innerHTML = wl.map((sym) => {
+          const why = (added[sym] && added[sym].reason) || "";
+          const cls = why === "SELL" ? "sell" : why === "BUY" ? "buy" : "";
+          return `<span class="pill ${cls}" data-symbol="${sym}" style="cursor:pointer">${sym}${why ? " · " + why : ""}</span>`;
+        }).join("");
+        $("watchlist").querySelectorAll("[data-symbol]").forEach((el) => {
+          el.addEventListener("click", () => showChart(el.getAttribute("data-symbol"), true));
+        });
+      }
+
+      const calls = s.calls || [];
+      $("board").innerHTML = calls.map((c) => `
+        <tr class="${rowClass(c.action)} clickable" data-symbol="${c.symbol}">
+          <td>${c.symbol}${c.auto_added ? " *" : ""}</td>
+          <td class="action">${tvLabel(c.action)}</td>
+          <td>${c.price ?? "—"}</td>
+          <td>${c.entry ?? "—"}</td>
+          <td>${c.stop ?? "—"}</td>
+          <td>${c.target ?? "—"}</td>
+          <td>${c.wait_min ? c.wait_min + "m until " + c.wait_until : "—"}</td>
+          <td>${c.signal_30m || "—"} / ${c.signal_5m || "—"}</td>
+          <td class="note">${c.confidence || ""}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="9">Waiting for first scan…</td></tr>`;
+      $("board").querySelectorAll("tr[data-symbol]").forEach((row) => {
+        row.addEventListener("click", () => showChart(row.getAttribute("data-symbol"), true));
+      });
+      if (!chartSymbol) {
+        const first = calls.find((c) => c.action === "BUY" || c.action === "SELL") || calls[0];
+        if (first) showChart(first.symbol, false);
+      }
+
+      const events = s.events || [];
+      $("events").innerHTML = events.slice().reverse().slice(0, 20).map((e) =>
+        `<li><span>${e.at}</span> · ${e.text}</li>`
+      ).join("") || "<li>No flips or new Buy/Sell yet.</li>";
+    }
+
+    document.addEventListener("click", (ev) => {
+      const btn = ev.target.closest(".tab-btn");
+      if (!btn) return;
+      ev.preventDefault();
+      setTab(btn.getAttribute("data-tab"));
+    });
+
+    $("scan").addEventListener("click", async () => {
+      if (!hosted) return;
+      $("scan").disabled = true;
+      await fetch("/api/scan", { method: "POST" });
+      await refresh();
+    });
+
+    const startTab = (window.location.hash || "").replace("#", "") || (function () {
+      try { return localStorage.getItem("boardTab") || "predictions"; } catch (err) { return "predictions"; }
+    })();
+    setTab(startTab === "pnl" ? "pnl" : "predictions");
+
+    refresh();
+    setInterval(refresh, 4000);
+  </script>
+</body>
+</html>
