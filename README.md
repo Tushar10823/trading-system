@@ -4,7 +4,22 @@ Automated paper-trading system: n8n workflows collect market data, Ollama makes 
 
 ## Quick start
 
-### 1. Install software (one-time)
+### Linux / macOS
+
+```bash
+git clone <your-repo-url>
+cd trading-system
+chmod +x scripts/*.sh
+./scripts/install.sh
+```
+
+Edit `.env` and `bot/.env` with your API keys, start **Docker**, then verify:
+
+```bash
+./scripts/verify.sh
+```
+
+### Windows
 
 ```powershell
 cd E:\AI\trading-system
@@ -19,6 +34,16 @@ Restart your terminal, start **Docker Desktop**, then verify:
 
 ### 2. Configure environment
 
+**Linux / macOS:**
+
+```bash
+cp .env.example .env
+cp bot/.env.example bot/.env
+# Edit both files with your API keys
+```
+
+**Windows:**
+
 ```powershell
 copy .env.example .env
 # Edit .env with your API keys
@@ -31,8 +56,15 @@ Sign up for free API keys:
 
 ### 3. Start infrastructure
 
-```powershell
+```bash
 docker compose up -d
+```
+
+Also start **Ollama** on the host (required for workflow 02):
+
+```bash
+ollama serve          # if not already running
+ollama pull llama3.2
 ```
 
 Services:
@@ -51,9 +83,9 @@ Services:
 
 ### 5. Start dashboard
 
-```powershell
+```bash
 cd web
-npm install
+npm install   # skip if ./scripts/install.sh already ran
 npm run dev
 ```
 
@@ -61,9 +93,8 @@ Open http://localhost:3000
 
 ### 6. Run tests
 
-```powershell
-.\scripts\e2e-test.ps1
-```
+**Linux / macOS:** `./scripts/e2e-test.sh`  
+**Windows:** `.\scripts\e2e-test.ps1`
 
 ## Architecture
 
