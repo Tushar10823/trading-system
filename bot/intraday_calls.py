@@ -27,6 +27,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
+import nyse_calendar
 from indicators import evaluate_all
 from market_data import fetch_intraday_bars
 from signal_engine import combine_labels
@@ -70,17 +71,12 @@ IST = ZoneInfo("Asia/Kolkata")
 
 
 def is_regular_market_hours() -> bool:
-    now = datetime.now(ET)
-    if now.weekday() >= 5:
-        return False
-    mins = now.hour * 60 + now.minute
-    return (9 * 60 + 30) <= mins < (16 * 60)
+    """NYSE regular session, with holidays and 1 p.m. early closes (nyse_calendar.py)."""
+    return nyse_calendar.is_open()
 
 
 def minutes_to_close() -> int:
-    now = datetime.now(ET)
-    close = now.replace(hour=16, minute=0, second=0, microsecond=0)
-    return int((close - now).total_seconds() // 60)
+    return nyse_calendar.minutes_to_close()
 
 
 def score_frame(df: pd.DataFrame) -> dict[str, Any]:

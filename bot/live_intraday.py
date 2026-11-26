@@ -23,6 +23,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.trading.requests import MarketOrderRequest
 
+import nyse_calendar
 import trader_bridge
 from market_data import fetch_intraday_bars, load_keys
 from signal_engine import format_signal_report, generate_signal
@@ -55,11 +56,8 @@ SIGNAL_FIELDS = [
 
 
 def is_regular_market_hours() -> bool:
-    now = datetime.now(ET)
-    if now.weekday() >= 5:
-        return False
-    minutes = now.hour * 60 + now.minute
-    return (9 * 60 + 30) <= minutes < (16 * 60)
+    """NYSE regular session, with holidays and 1 p.m. early closes (nyse_calendar.py)."""
+    return nyse_calendar.is_open()
 
 
 def append_csv(path: Path, fieldnames: list[str], row: dict[str, Any]) -> None:
@@ -202,7 +200,9 @@ def run_once(symbol: str, bar_minutes: int, auto_trade: bool) -> dict[str, Any]:
 
     order_id = ""
     order_status = "log_only"
-    if auto_trade:
+    if auto_trade and not market_open:
+        print(f"US market closed ({nyse_calendar.closed_reason()}): no orders this run, signal logged only.")
+    if auto_trade and market_open:
         print("AUTO-TRADE ENABLED — PAPER orders only...")
         meta = execute_auto_trade(client, symbol, payload["signal"], close)
         order_id = meta.get("order_id", "")

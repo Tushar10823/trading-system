@@ -251,7 +251,9 @@ def run_scan(top_n: int, interval_min: int) -> None:
                 events.append({"at": stamp, "text": f"PAPER {line}"})
                 print(f"  PAPER {line}")
             paper = public_book()
-        if CFG.get("auto_trade") and not CFG.get("once"):
+        if CFG.get("auto_trade") and not CFG.get("once") and not is_regular_market_hours():
+            events.append({"at": stamp, "text": "ALPACA no paper orders: US market closed"})
+        elif CFG.get("auto_trade") and not CFG.get("once"):
             from paper_exec import arm_from_calls, execute_new_calls, load_last_actions
 
             if not load_last_actions():

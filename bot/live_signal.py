@@ -37,6 +37,7 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, TimeInForce
 from alpaca.trading.requests import MarketOrderRequest
 
+import nyse_calendar
 import trader_bridge
 from market_data import fetch_daily_bars, load_keys
 from signal_engine import format_signal_report, generate_signal
@@ -61,16 +62,8 @@ def account_mode_banner(base_url: str, paper: bool) -> str:
 
 
 def is_regular_market_hours(now: datetime | None = None) -> bool:
-    """US equities regular session Mon-Fri 09:30-16:00 America/New_York."""
-    now = now or datetime.now(ET)
-    if now.tzinfo is None:
-        now = now.replace(tzinfo=ET)
-    else:
-        now = now.astimezone(ET)
-    if now.weekday() >= 5:
-        return False
-    minutes = now.hour * 60 + now.minute
-    return (9 * 60 + 30) <= minutes < (16 * 60)
+    """NYSE regular session, with holidays and 1 p.m. early closes (nyse_calendar.py)."""
+    return nyse_calendar.is_open(now)
 
 
 def ensure_csv(path: Path, fieldnames: list[str]) -> None:
@@ -247,7 +240,7 @@ def run_once(symbol: str, auto_trade: bool) -> dict[str, Any]:
     market_open = is_regular_market_hours()
     print(f"US regular market hours now: {market_open}")
     if auto_trade and not market_open:
-        print("WARNING: --auto-trade set but market looks closed; order may be rejected.")
+        print(f"US market closed ({nyse_calendar.closed_reason()}): no orders this run, signal logged only.")
     print("=" * 60)
 
     df = fetch_daily_bars(symbol, trading_days=90)
@@ -263,7 +256,7 @@ def run_once(symbol: str, auto_trade: bool) -> dict[str, Any]:
         "notes": "auto_trade disabled - signal logged only",
     }
 
-    if auto_trade:
+    if auto_trade and market_open:
         print("AUTO-TRADE ENABLED — submitting PAPER market order if applicable...")
         trade_meta = execute_auto_trade(client, symbol, payload["signal"], close)
         order_id = trade_meta.get("order_id", "")

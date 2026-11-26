@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+import nyse_calendar
+
 OUTPUT = Path(__file__).resolve().parent / "output"
 BOOK_FILE = OUTPUT / "internal_paper.json"
 IST = ZoneInfo("Asia/Kolkata")
@@ -175,6 +177,12 @@ def apply_new_calls(calls: list[dict[str, Any]], qty: int = DEFAULT_QTY) -> tupl
     book = load_book()
     prices = {str(c["symbol"]).upper(): float(c["price"]) for c in calls if c.get("price") is not None}
     notes = mark_to_market(book, prices)
+
+    if not nyse_calendar.is_open():
+        # Off-hours and holiday scans use stale bars: mark only, no fills, and leave
+        # last_actions alone so the first call after the open is judged fresh.
+        save_book(book)
+        return book, notes + [f"US market closed ({nyse_calendar.closed_reason()}): no paper fills"]
 
     if not book.get("armed"):
         for c in calls:
