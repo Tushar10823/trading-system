@@ -1,0 +1,771 @@
+{
+  "cash": 97130.7,
+  "starting_cash": 100000.0,
+  "realized_pnl": 2851.1,
+  "positions": [
+    {
+      "symbol": "AMD",
+      "side": "long",
+      "qty": 10,
+      "entry": 422.52,
+      "stop": 420.83,
+      "target": 424.21,
+      "last": 422.52,
+      "pnl": 0.0
+    },
+    {
+      "symbol": "NVDA",
+      "side": "long",
+      "qty": 10,
+      "entry": 149.52,
+      "stop": 148.92,
+      "target": 150.12,
+      "last": 149.52,
+      "pnl": 0.0
+    }
+  ],
+  "trades": [
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "NFLX",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 58.84,
+      "pnl": -9.6,
+      "notes": "STOP long 10 NFLX @ 58.84 P&L $-9.60 (10 sh)"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "AMD",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 483.84,
+      "pnl": -415.8,
+      "notes": "STOP long 10 AMD @ 483.84 P&L $-415.80 (10 sh)"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "CRM",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 187.02,
+      "pnl": -33.6,
+      "notes": "STOP long 10 CRM @ 187.02 P&L $-33.60 (10 sh)"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "CRM",
+      "action": "SELL",
+      "qty": 10,
+      "price": 187.02,
+      "pnl": 0.0,
+      "notes": "SELL 10 CRM @ 187.02 SL 187.77 TP 186.27"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "NFLX",
+      "action": "SELL",
+      "qty": 10,
+      "price": 58.84,
+      "pnl": 0.0,
+      "notes": "SELL 10 NFLX @ 58.84 SL 59.08 TP 58.6"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "AMZN",
+      "action": "SELL",
+      "qty": 10,
+      "price": 261.66,
+      "pnl": 0.0,
+      "notes": "SELL 10 AMZN @ 261.66 SL 262.71 TP 260.61"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "GOOGL",
+      "action": "SELL",
+      "qty": 10,
+      "price": 281.62,
+      "pnl": 0.0,
+      "notes": "SELL 10 GOOGL @ 281.62 SL 282.74 TP 280.49"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "MSFT",
+      "action": "SELL",
+      "qty": 10,
+      "price": 506.06,
+      "pnl": 0.0,
+      "notes": "SELL 10 MSFT @ 506.06 SL 508.08 TP 504.04"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "PLTR",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 156.29,
+      "pnl": -3.9,
+      "notes": "SELL long 10 PLTR @ 156.29 P&L $-3.90 (10 sh)"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "PLTR",
+      "action": "SELL",
+      "qty": 10,
+      "price": 156.29,
+      "pnl": 0.0,
+      "notes": "SELL 10 PLTR @ 156.29 SL 156.92 TP 155.66"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "NVDA",
+      "action": "SELL",
+      "qty": 10,
+      "price": 149.06,
+      "pnl": 0.0,
+      "notes": "SELL 10 NVDA @ 149.06 SL 149.66 TP 148.46"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "AVGO",
+      "action": "SELL",
+      "qty": 10,
+      "price": 349.67,
+      "pnl": 0.0,
+      "notes": "SELL 10 AVGO @ 349.67 SL 351.07 TP 348.27"
+    },
+    {
+      "at": "2026-11-19 23:35 IST",
+      "symbol": "BABA",
+      "action": "SELL",
+      "qty": 10,
+      "price": 85.28,
+      "pnl": 0.0,
+      "notes": "SELL 10 BABA @ 85.28 SL 85.62 TP 84.94"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "CRM",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 183.44,
+      "pnl": 35.8,
+      "notes": "TARGET short 10 CRM @ 183.44 P&L $35.80 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "NFLX",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 58.47,
+      "pnl": 3.7,
+      "notes": "TARGET short 10 NFLX @ 58.47 P&L $3.70 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "AMZN",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 257.25,
+      "pnl": 44.1,
+      "notes": "TARGET short 10 AMZN @ 257.25 P&L $44.10 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "GOOGL",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 272.97,
+      "pnl": 86.5,
+      "notes": "TARGET short 10 GOOGL @ 272.97 P&L $86.50 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "MSFT",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 498.45,
+      "pnl": 76.1,
+      "notes": "TARGET short 10 MSFT @ 498.45 P&L $76.10 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "PLTR",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 153.62,
+      "pnl": 26.7,
+      "notes": "TARGET short 10 PLTR @ 153.62 P&L $26.70 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "NVDA",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 145.29,
+      "pnl": 37.7,
+      "notes": "TARGET short 10 NVDA @ 145.29 P&L $37.70 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "BABA",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 83.3,
+      "pnl": 19.8,
+      "notes": "TARGET short 10 BABA @ 83.30 P&L $19.80 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "CRM",
+      "action": "BUY",
+      "qty": 10,
+      "price": 183.44,
+      "pnl": 0.0,
+      "notes": "BUY 10 CRM @ 183.44 SL 182.71 TP 184.17"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "SMCI",
+      "action": "SELL",
+      "qty": 10,
+      "price": 23.74,
+      "pnl": 0.0,
+      "notes": "SELL 10 SMCI @ 23.74 SL 23.83 TP 23.65"
+    },
+    {
+      "at": "2026-11-20 06:15 IST",
+      "symbol": "COIN",
+      "action": "SELL",
+      "qty": 10,
+      "price": 107.79,
+      "pnl": 0.0,
+      "notes": "SELL 10 COIN @ 107.79 SL 108.22 TP 107.36"
+    },
+    {
+      "at": "2026-11-20 22:04 IST",
+      "symbol": "AVGO",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 312.73,
+      "pnl": 369.4,
+      "notes": "TARGET short 10 AVGO @ 312.73 P&L $369.40 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 22:04 IST",
+      "symbol": "CRM",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 184.89,
+      "pnl": 14.5,
+      "notes": "TARGET long 10 CRM @ 184.89 P&L $14.50 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 22:04 IST",
+      "symbol": "SMCI",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 22.25,
+      "pnl": 14.9,
+      "notes": "TARGET short 10 SMCI @ 22.25 P&L $14.90 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 22:04 IST",
+      "symbol": "COIN",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 106.47,
+      "pnl": 13.2,
+      "notes": "TARGET short 10 COIN @ 106.47 P&L $13.20 (10 sh)"
+    },
+    {
+      "at": "2026-11-20 22:04 IST",
+      "symbol": "AAPL",
+      "action": "SELL",
+      "qty": 10,
+      "price": 347.67,
+      "pnl": 0.0,
+      "notes": "SELL 10 AAPL @ 347.67 SL 349.06 TP 346.27"
+    },
+    {
+      "at": "2026-11-20 22:04 IST",
+      "symbol": "CRM",
+      "action": "SELL",
+      "qty": 10,
+      "price": 184.89,
+      "pnl": 0.0,
+      "notes": "SELL 10 CRM @ 184.89 SL 185.63 TP 184.15"
+    },
+    {
+      "at": "2026-11-20 22:04 IST",
+      "symbol": "AMD",
+      "action": "SELL",
+      "qty": 10,
+      "price": 437.01,
+      "pnl": 0.0,
+      "notes": "SELL 10 AMD @ 437.01 SL 438.76 TP 435.27"
+    },
+    {
+      "at": "2026-11-21 04:23 IST",
+      "symbol": "AAPL",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 343.4,
+      "pnl": 42.7,
+      "notes": "TARGET short 10 AAPL @ 343.40 P&L $42.70 (10 sh)"
+    },
+    {
+      "at": "2026-11-21 04:23 IST",
+      "symbol": "CRM",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 180.66,
+      "pnl": 42.3,
+      "notes": "TARGET short 10 CRM @ 180.66 P&L $42.30 (10 sh)"
+    },
+    {
+      "at": "2026-11-21 04:23 IST",
+      "symbol": "AMD",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 429.6,
+      "pnl": 74.1,
+      "notes": "TARGET short 10 AMD @ 429.60 P&L $74.10 (10 sh)"
+    },
+    {
+      "at": "2026-11-21 04:23 IST",
+      "symbol": "TSLA",
+      "action": "SELL",
+      "qty": 10,
+      "price": 349.32,
+      "pnl": 0.0,
+      "notes": "SELL 10 TSLA @ 349.32 SL 350.72 TP 347.92"
+    },
+    {
+      "at": "2026-11-24 02:15 IST",
+      "symbol": "TSLA",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 388.33,
+      "pnl": -390.1,
+      "notes": "STOP short 10 TSLA @ 388.33 P&L $-390.10 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 10:35 IST",
+      "symbol": "CRM",
+      "action": "BUY",
+      "qty": 10,
+      "price": 185.47,
+      "pnl": 0.0,
+      "notes": "BUY 10 CRM @ 185.47 SL 184.72 TP 186.21"
+    },
+    {
+      "at": "2026-11-24 10:35 IST",
+      "symbol": "NFLX",
+      "action": "BUY",
+      "qty": 10,
+      "price": 58.09,
+      "pnl": 0.0,
+      "notes": "BUY 10 NFLX @ 58.09 SL 57.86 TP 58.32"
+    },
+    {
+      "at": "2026-11-24 10:35 IST",
+      "symbol": "SMCI",
+      "action": "BUY",
+      "qty": 10,
+      "price": 24.55,
+      "pnl": 0.0,
+      "notes": "BUY 10 SMCI @ 24.55 SL 24.45 TP 24.64"
+    },
+    {
+      "at": "2026-11-24 10:35 IST",
+      "symbol": "MSTR",
+      "action": "BUY",
+      "qty": 10,
+      "price": 84.44,
+      "pnl": 0.0,
+      "notes": "BUY 10 MSTR @ 84.44 SL 84.1 TP 84.77"
+    },
+    {
+      "at": "2026-11-24 10:35 IST",
+      "symbol": "INTC",
+      "action": "BUY",
+      "qty": 10,
+      "price": 59.64,
+      "pnl": 0.0,
+      "notes": "BUY 10 INTC @ 59.64 SL 59.4 TP 59.88"
+    },
+    {
+      "at": "2026-11-24 10:35 IST",
+      "symbol": "PLTR",
+      "action": "BUY",
+      "qty": 10,
+      "price": 159.39,
+      "pnl": 0.0,
+      "notes": "BUY 10 PLTR @ 159.39 SL 158.75 TP 160.03"
+    },
+    {
+      "at": "2026-11-24 10:35 IST",
+      "symbol": "COIN",
+      "action": "BUY",
+      "qty": 10,
+      "price": 108.82,
+      "pnl": 0.0,
+      "notes": "BUY 10 COIN @ 108.82 SL 108.38 TP 109.26"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "CRM",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 194.11,
+      "pnl": 86.4,
+      "notes": "TARGET long 10 CRM @ 194.11 P&L $86.40 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "NFLX",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 59.01,
+      "pnl": 9.2,
+      "notes": "TARGET long 10 NFLX @ 59.01 P&L $9.20 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "SMCI",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 22.45,
+      "pnl": -21.0,
+      "notes": "STOP long 10 SMCI @ 22.45 P&L $-21.00 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "MSTR",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 78.9,
+      "pnl": -55.4,
+      "notes": "STOP long 10 MSTR @ 78.90 P&L $-55.40 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "INTC",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 54.18,
+      "pnl": -54.6,
+      "notes": "STOP long 10 INTC @ 54.18 P&L $-54.60 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "PLTR",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 160.34,
+      "pnl": 9.5,
+      "notes": "TARGET long 10 PLTR @ 160.34 P&L $9.50 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "COIN",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 103.44,
+      "pnl": -53.8,
+      "notes": "STOP long 10 COIN @ 103.44 P&L $-53.80 (10 sh)"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "MSTR",
+      "action": "SELL",
+      "qty": 10,
+      "price": 78.9,
+      "pnl": 0.0,
+      "notes": "SELL 10 MSTR @ 78.90 SL 79.22 TP 78.58"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "INTC",
+      "action": "SELL",
+      "qty": 10,
+      "price": 54.18,
+      "pnl": 0.0,
+      "notes": "SELL 10 INTC @ 54.18 SL 54.4 TP 53.96"
+    },
+    {
+      "at": "2026-11-24 21:34 IST",
+      "symbol": "COIN",
+      "action": "SELL",
+      "qty": 10,
+      "price": 103.44,
+      "pnl": 0.0,
+      "notes": "SELL 10 COIN @ 103.44 SL 103.85 TP 103.02"
+    },
+    {
+      "at": "2026-11-25 06:27 IST",
+      "symbol": "MSTR",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 77.13,
+      "pnl": 17.7,
+      "notes": "TARGET short 10 MSTR @ 77.13 P&L $17.70 (10 sh)"
+    },
+    {
+      "at": "2026-11-25 06:27 IST",
+      "symbol": "INTC",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 54.78,
+      "pnl": -6.0,
+      "notes": "STOP short 10 INTC @ 54.78 P&L $-6.00 (10 sh)"
+    },
+    {
+      "at": "2026-11-25 06:27 IST",
+      "symbol": "COIN",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 102.31,
+      "pnl": 11.3,
+      "notes": "TARGET short 10 COIN @ 102.31 P&L $11.30 (10 sh)"
+    },
+    {
+      "at": "2026-11-25 06:27 IST",
+      "symbol": "AAPL",
+      "action": "BUY",
+      "qty": 10,
+      "price": 354.24,
+      "pnl": 0.0,
+      "notes": "BUY 10 AAPL @ 354.24 SL 352.82 TP 355.66"
+    },
+    {
+      "at": "2026-11-25 06:27 IST",
+      "symbol": "MSFT",
+      "action": "BUY",
+      "qty": 10,
+      "price": 496.15,
+      "pnl": 0.0,
+      "notes": "BUY 10 MSFT @ 496.15 SL 494.17 TP 498.13"
+    },
+    {
+      "at": "2026-11-25 06:27 IST",
+      "symbol": "TSLA",
+      "action": "BUY",
+      "qty": 10,
+      "price": 384.96,
+      "pnl": 0.0,
+      "notes": "BUY 10 TSLA @ 384.96 SL 383.42 TP 386.5"
+    },
+    {
+      "at": "2026-11-26 01:11 IST",
+      "symbol": "MSFT",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 492.87,
+      "pnl": -32.8,
+      "notes": "STOP long 10 MSFT @ 492.87 P&L $-32.80 (10 sh)"
+    },
+    {
+      "at": "2026-11-26 01:11 IST",
+      "symbol": "NVDA",
+      "action": "SELL",
+      "qty": 10,
+      "price": 148.69,
+      "pnl": 0.0,
+      "notes": "SELL 10 NVDA @ 148.69 SL 149.28 TP 148.1"
+    },
+    {
+      "at": "2026-11-26 08:05 IST",
+      "symbol": "TSLA",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 379.53,
+      "pnl": -54.3,
+      "notes": "STOP long 10 TSLA @ 379.53 P&L $-54.30 (10 sh)"
+    },
+    {
+      "at": "2026-11-26 08:05 IST",
+      "symbol": "NVDA",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 149.73,
+      "pnl": -10.4,
+      "notes": "STOP short 10 NVDA @ 149.73 P&L $-10.40 (10 sh)"
+    },
+    {
+      "at": "2026-11-26 08:05 IST",
+      "symbol": "BABA",
+      "action": "BUY",
+      "qty": 10,
+      "price": 86.28,
+      "pnl": 0.0,
+      "notes": "BUY 10 BABA @ 86.28 SL 85.93 TP 86.63"
+    },
+    {
+      "at": "2026-11-26 08:05 IST",
+      "symbol": "MSTR",
+      "action": "BUY",
+      "qty": 10,
+      "price": 80.09,
+      "pnl": 0.0,
+      "notes": "BUY 10 MSTR @ 80.09 SL 79.77 TP 80.41"
+    },
+    {
+      "at": "2026-11-26 08:05 IST",
+      "symbol": "INTC",
+      "action": "BUY",
+      "qty": 10,
+      "price": 54.21,
+      "pnl": 0.0,
+      "notes": "BUY 10 INTC @ 54.21 SL 53.99 TP 54.43"
+    },
+    {
+      "at": "2026-11-26 08:05 IST",
+      "symbol": "AMD",
+      "action": "SELL",
+      "qty": 10,
+      "price": 406.14,
+      "pnl": 0.0,
+      "notes": "SELL 10 AMD @ 406.14 SL 407.76 TP 404.52"
+    },
+    {
+      "at": "2026-11-26 08:05 IST",
+      "symbol": "META",
+      "action": "BUY",
+      "qty": 10,
+      "price": 609.21,
+      "pnl": 0.0,
+      "notes": "BUY 10 META @ 609.21 SL 606.77 TP 611.65"
+    },
+    {
+      "at": "2026-11-27 08:54 IST",
+      "symbol": "AMZN",
+      "action": "SELL",
+      "qty": 10,
+      "price": 244.49,
+      "pnl": 0.0,
+      "notes": "SELL 10 AMZN @ 244.49 SL 245.47 TP 243.51"
+    },
+    {
+      "at": "2026-11-27 08:54 IST",
+      "symbol": "GOOGL",
+      "action": "SELL",
+      "qty": 10,
+      "price": 273.11,
+      "pnl": 0.0,
+      "notes": "SELL 10 GOOGL @ 273.11 SL 274.2 TP 272.02"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "AAPL",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 358.68,
+      "pnl": 44.4,
+      "notes": "TARGET long 10 AAPL @ 358.68 P&L $44.40 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "BABA",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 89.74,
+      "pnl": 34.6,
+      "notes": "TARGET long 10 BABA @ 89.74 P&L $34.60 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "MSTR",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 82.2,
+      "pnl": 21.1,
+      "notes": "TARGET long 10 MSTR @ 82.20 P&L $21.10 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "INTC",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 56.92,
+      "pnl": 27.1,
+      "notes": "TARGET long 10 INTC @ 56.92 P&L $27.10 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "AMD",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 422.52,
+      "pnl": -163.8,
+      "notes": "STOP short 10 AMD @ 422.52 P&L $-163.80 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "META",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 630.0,
+      "pnl": 207.9,
+      "notes": "TARGET long 10 META @ 630.00 P&L $207.90 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "AMZN",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 254.29,
+      "pnl": -98.0,
+      "notes": "STOP short 10 AMZN @ 254.29 P&L $-98.00 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "GOOGL",
+      "action": "CLOSE",
+      "qty": 10,
+      "price": 275.53,
+      "pnl": -24.2,
+      "notes": "STOP short 10 GOOGL @ 275.53 P&L $-24.20 (10 sh)"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "AMD",
+      "action": "BUY",
+      "qty": 10,
+      "price": 422.52,
+      "pnl": 0.0,
+      "notes": "BUY 10 AMD @ 422.52 SL 420.83 TP 424.21"
+    },
+    {
+      "at": "2026-11-28 03:15 IST",
+      "symbol": "NVDA",
+      "action": "BUY",
+      "qty": 10,
+      "price": 149.52,
+      "pnl": 0.0,
+      "notes": "BUY 10 NVDA @ 149.52 SL 148.92 TP 150.12"
+    }
+  ],
+  "last_actions": {
+    "AAPL": "BUY",
+    "PLTR": "BUY",
+    "MSTR": "BUY",
+    "SMCI": "EXIT",
+    "META": "BUY",
+    "CRM": "BUY",
+    "AMD": "BUY",
+    "AVGO": "SELL",
+    "NFLX": "BUY",
+    "MSFT": "BUY",
+    "AMZN": "SELL",
+    "INTC": "BUY",
+    "COIN": "SELL",
+    "BABA": "BUY",
+    "TSLA": "BUY",
+    "NVDA": "BUY",
+    "GOOGL": "SELL"
+  },
+  "armed": true,
+  "equity": 97130.7,
+  "open_pnl": 0.0
+}
